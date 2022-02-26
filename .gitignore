@@ -9,3 +9,6 @@ typechain
 
 # ignore .env files
 .env
+
+# yarn
+yarn-error.log
