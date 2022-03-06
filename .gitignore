@@ -15,5 +15,5 @@ yarn-error.log
 
 # openzeppelin
 .openzeppelin/dev-*.json
-.openzeppelin/unknown-31337.json
+.openzeppelin/unknown-*.json
 .openzeppelin/.session
