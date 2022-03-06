@@ -17,6 +17,8 @@ interface IErc20Escrow {
 
     function deposit(address _token, uint256 _orderId, address _sender, uint256 _amount) external;
 
+    function depositBatch(address _token, uint256[] memory _orderIds, address _sender, uint256[] memory _amounts) external;
+
     function withdraw(uint256 _orderId, address _user, uint256 _amount) external;
     
     function transferRoyalty(address _token, address _sender, address _owner, uint256 _amount) external;

@@ -65,6 +65,24 @@ contract Erc20Escrow is IErc20Escrow, EscrowBase {
         IERC20Upgradeable(_token).transferFrom(_sender, address(this), _amount);
     }
 
+    function depositBatch(
+        address _token,
+        uint256[] memory _orderIds,
+        address _sender,
+        uint256[] memory _amount
+    ) external override onlyRole(MANAGER_ROLE) {
+        uint256 total;
+        for (uint256 i = 0; i < _orderIds.length; i++) {
+            // Update escrowedByOrder for each order
+            escrowedByOrder[_orderIds[i]].token = _token;
+            escrowedByOrder[_orderIds[i]].amount = escrowedByOrder[_orderIds[i]].amount + _amount[i];
+            // add to total
+            total += _amount[i];
+        }
+        // Send the total amount of tokens to the Escrow
+        IERC20Upgradeable(_token).transferFrom(_sender, address(this), total);
+    }
+
     function withdraw(
         uint256 _orderId,
         address _receiver,
@@ -72,7 +90,7 @@ contract Erc20Escrow is IErc20Escrow, EscrowBase {
     ) external override onlyRole(MANAGER_ROLE) {
         require(escrowedByOrder[_orderId].amount >= _amount, "Invalid amount");
 
-        escrowedByOrder[_orderId].amount = escrowedByOrder[_orderId].amount - _amount;
+        escrowedByOrder[_orderId].amount -= _amount;
         IERC20Upgradeable(escrowedByOrder[_orderId].token).transfer(_receiver, _amount);
     }
     
