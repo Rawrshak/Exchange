@@ -90,7 +90,7 @@ contract Erc20Escrow is IErc20Escrow, EscrowBase {
     ) external override onlyRole(MANAGER_ROLE) {
         require(escrowedByOrder[_orderId].amount >= _amount, "Invalid amount");
 
-        escrowedByOrder[_orderId].amount -= _amount;
+        escrowedByOrder[_orderId].amount = escrowedByOrder[_orderId].amount - _amount;
         IERC20Upgradeable(escrowedByOrder[_orderId].token).transfer(_receiver, _amount);
     }
     
