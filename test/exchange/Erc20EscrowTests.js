@@ -52,7 +52,7 @@ describe('ERC20 Escrow Contract tests', () => {
     
         it('Supports the Erc20Escrow Interface', async () => {
             // IErc20Escrow Interface
-            expect(await escrow.supportsInterface("0xfeb2d5c7")).to.equal(true);
+            expect(await escrow.supportsInterface("0xc179aeed")).to.equal(true);
 
             // IEscrowBase Interface
             expect(await escrow.supportsInterface("0xc7aacb62")).to.equal(true);
