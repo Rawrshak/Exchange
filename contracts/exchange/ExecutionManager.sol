@@ -69,9 +69,7 @@ contract ExecutionManager is IExecutionManager, ManagerBase {
         require(_orderIds.length == _paymentPerOrder.length && _orderIds.length == _amounts.length, "Invalid input length");
         
         // send payment from user to escrow
-        for (uint256 i = 0; i < _orderIds.length; ++i) {
-            _tokenEscrow().deposit(_token, _orderIds[i], _user, _paymentPerOrder[i]);
-        }
+        _tokenEscrow().depositBatch(_token, _orderIds, _user, _paymentPerOrder);
 
         // send asset to buyer
         _nftEscrow().withdrawBatch(_orderIds, _user, _amounts);
