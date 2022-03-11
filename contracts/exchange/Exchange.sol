@@ -90,21 +90,18 @@ contract Exchange is IExchange, ContextUpgradeable, OwnableUpgradeable, ERC165St
         // Orderbook -> fill buy order
         orderbook.fillOrders(_orderIds, orderAmounts);
 
-        // Deduct royalties from escrow per order and transfer to claimable in escrow
-        for (uint256 i = 0; i < _orderIds.length; ++i) {
-            if (orderAmounts[i] > 0) {
-                (address receiver,
-                uint256 royaltyFee,
-                uint256 remaining) = royaltyManager.payableRoyalties(order.asset, amountPerOrder[i]);
-                
-                royaltyManager.transferRoyalty(_orderIds[i], receiver, royaltyFee);
-                royaltyManager.transferPlatformFee(order.token, _orderIds[i], amountPerOrder[i]);
-                amountPerOrder[i] = remaining;
-            }
-        }
+        // Calculate and deduct royalties from escrow per order
+        (address receiver,
+        uint256[] memory royaltyFees,
+        uint256[] memory platformFees,
+        uint256[] memory remaining) = royaltyManager.buyOrderRoyalties(order.asset, amountPerOrder);
+
+        // update the royalty table from each orderId and pay platform fees
+        royaltyManager.transferRoyalty(_orderIds, receiver, royaltyFees);
+        royaltyManager.transferPlatformFee(order.token, _orderIds, platformFees);
 
         // Update Escrow records for the orders - will revert if the user doesn't have enough assets
-        executionManager.executeBuyOrder(_msgSender(), _orderIds, amountPerOrder, orderAmounts, order.asset);
+        executionManager.executeBuyOrder(_msgSender(), _orderIds, remaining, orderAmounts, order.asset);
 
         emit OrdersFilled(_msgSender(), _orderIds, orderAmounts, order.asset, order.token, assetsSold, volume);
     }
@@ -134,22 +131,17 @@ contract Exchange is IExchange, ContextUpgradeable, OwnableUpgradeable, ERC165St
         // Orderbook -> fill sell order
         orderbook.fillOrders(_orderIds, orderAmounts);
 
-        // Deduct royalties
-        for (uint256 i = 0; i < _orderIds.length; ++i) {
-            if (orderAmounts[i] > 0) {
-                (address receiver,
-                uint256 royaltyFee,
-                uint256 remaining) = royaltyManager.payableRoyalties(order.asset, amountPerOrder[i]);
+        // Calculate and deduct royalties
+        (address receiver,
+        uint256 royaltyFee,
+        uint256[] memory remaining) = royaltyManager.sellOrderRoyalties(order.asset, amountPerOrder);
 
-                // for each order, update the royalty table for each creator to get paid
-                royaltyManager.transferRoyalty(_msgSender(), order.token, receiver, royaltyFee);
-                royaltyManager.transferPlatformFee(_msgSender(), order.token, amountPerOrder[i]);
-                amountPerOrder[i] = remaining;
-            }
-        }
+        // update the royalty table and pay creator royalties and platform fees
+        royaltyManager.transferRoyalty(_msgSender(), order.token, receiver, royaltyFee);
+        royaltyManager.transferPlatformFee(_msgSender(), order.token, volume);
 
         // Execute trade - will revert if buyer doesn't have enough funds
-        executionManager.executeSellOrder(_msgSender(), _orderIds, amountPerOrder, orderAmounts, order.token);
+        executionManager.executeSellOrder(_msgSender(), _orderIds, remaining, orderAmounts, order.token);
 
         emit OrdersFilled(_msgSender(), _orderIds, orderAmounts, order.asset, order.token, assetsBought, volume);
     }
