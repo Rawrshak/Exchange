@@ -31,7 +31,12 @@ interface IErc20Escrow {
     
     function transferPlatformFee(address _token, address _sender, address _feesEscrow, uint256 _amount) external;
 
-    function transferPlatformFee(uint256 _orderId, address _feesEscrow, uint256 _amount) external;
+    function transferPlatformFee(
+        uint256[] calldata _orderIds, 
+        address _feesEscrow, 
+        uint256[] calldata _platformFees, 
+        uint256 totalFee
+    ) external;
 
     function claimRoyalties(address _owner) external;
 

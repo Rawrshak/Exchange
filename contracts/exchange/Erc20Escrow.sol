@@ -69,15 +69,15 @@ contract Erc20Escrow is IErc20Escrow, EscrowBase {
         address _token,
         uint256[] memory _orderIds,
         address _sender,
-        uint256[] memory _amount
+        uint256[] memory _amounts
     ) external override onlyRole(MANAGER_ROLE) {
         uint256 total;
         for (uint256 i = 0; i < _orderIds.length; i++) {
             // Update escrowedByOrder for each order
             escrowedByOrder[_orderIds[i]].token = _token;
-            escrowedByOrder[_orderIds[i]].amount = escrowedByOrder[_orderIds[i]].amount + _amount[i];
+            escrowedByOrder[_orderIds[i]].amount = escrowedByOrder[_orderIds[i]].amount + _amounts[i];
             // add to total
-            total += _amount[i];
+            total += _amounts[i];
         }
         // Send the total amount of tokens to the Escrow
         IERC20Upgradeable(_token).transferFrom(_sender, address(this), total);
@@ -140,10 +140,17 @@ contract Erc20Escrow is IErc20Escrow, EscrowBase {
     }
 
     // Transfer Platform fees from escrowed by order to escrow
-    function transferPlatformFee(uint256 _orderId, address _feesEscrow, uint256 _amount) external override onlyRole(MANAGER_ROLE) {
-        // No need to do checks. The exchange contracts will do the checks.
-        escrowedByOrder[_orderId].amount = escrowedByOrder[_orderId].amount - _amount;
-        IERC20Upgradeable(escrowedByOrder[_orderId].token).transfer(_feesEscrow, _amount);
+    function transferPlatformFee(
+        uint256[] calldata _orderIds, 
+        address _feesEscrow, 
+        uint256[] calldata _platformFees, 
+        uint256 _totalFee
+    ) external override onlyRole(MANAGER_ROLE) {
+        for (uint256 i = 0; i < _orderIds.length; i++) {
+            // No need to do checks. The exchange contracts will do the checks.
+            escrowedByOrder[_orderIds[i]].amount -= _platformFees[i];
+        }
+        IERC20Upgradeable(escrowedByOrder[_orderIds[0]].token).transfer(_feesEscrow, _totalFee);
     }
 
     function claimRoyalties(address _owner) external override onlyRole(MANAGER_ROLE) {
