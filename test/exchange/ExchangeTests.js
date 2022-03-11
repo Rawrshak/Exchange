@@ -306,6 +306,64 @@ describe('Exchange Contract', () => {
         playerAddress.address,
         rawrToken.address,
         ethers.BigNumber.from(100).mul(_1e18),
+        5,
+        true
+      ];
+      var order2Data = [
+        [content.address, 0],
+        playerAddress.address,
+        rawrToken.address,
+        ethers.BigNumber.from(100).mul(_1e18),
+        5,
+        true
+      ];
+
+      // Player 1 Creates a buy order for an asset
+      await rawrToken.connect(playerAddress).approve(await exchange.tokenEscrow(), ethers.BigNumber.from(1000).mul(_1e18));
+
+      var tx = await exchange.connect(playerAddress).placeOrder(orderData);
+      var receipt = await tx.wait();
+      var ordersPlaced = receipt.events?.filter((x) => { return x.event == "OrderPlaced" });
+      var orderId = ordersPlaced[0].args.orderId;
+
+      tx = await exchange.connect(playerAddress).placeOrder(orderData);
+      receipt = await tx.wait();
+      ordersPlaced = receipt.events?.filter((x) => { return x.event == "OrderPlaced" });
+      var order2Id = ordersPlaced[0].args.orderId;
+
+
+      // player 2 fills the buy order by selling the asset and receiving payment minus royalties
+      await content.connect(player2Address).setApprovalForAll(await exchange.nftsEscrow(), true);
+
+      expect(await exchange.connect(player2Address).fillBuyOrder([orderId, order2Id], 10, ethers.BigNumber.from(1000).mul(_1e18)))
+        .to.emit(exchange, 'OrdersFilled');
+
+      // platform has 30 basis points and creator has 200 basis points from royalties so player2Address should only have
+      // 10000 (initial) + 977 from the sale of their assets
+      expect(await rawrToken.balanceOf(player2Address.address)).to.equal(ethers.BigNumber.from(10977).mul(_1e18));
+      expect(await feesEscrow.totalFees(rawrToken.address)).to.equal(ethers.BigNumber.from(3).mul(_1e18));
+      expect(await rawrToken.balanceOf(feesEscrow.address)).to.equal(ethers.BigNumber.from(3).mul(_1e18));
+
+      // player 2 should now have sold all 10 of their assets, and have 0 remaining
+      expect(await content.balanceOf(player2Address.address, 0)).to.equal(0);
+
+      // check order data
+      order = await exchange.getOrder(orderId);
+      expect(order.amountFilled).to.equal(5);
+
+      order = await exchange.getOrder(order2Id);
+      expect(order.amountFilled).to.equal(5);
+    });
+
+    it('Multiple Sell orders', async () => {
+      await ContentContractSetup();
+      await RawrTokenSetup();
+
+      var orderData = [
+        [content.address, 0],
+        playerAddress.address,
+        rawrToken.address,
+        ethers.BigNumber.from(100).mul(_1e18),
         2,
         false
       ];

@@ -52,7 +52,7 @@ describe('ERC20 Escrow Contract tests', () => {
     
         it('Supports the Erc20Escrow Interface', async () => {
             // IErc20Escrow Interface
-            expect(await escrow.supportsInterface("0xc179aeed")).to.equal(true);
+            expect(await escrow.supportsInterface("0xb50e494b")).to.equal(true);
 
             // IEscrowBase Interface
             expect(await escrow.supportsInterface("0xc7aacb62")).to.equal(true);
@@ -190,7 +190,7 @@ describe('ERC20 Escrow Contract tests', () => {
             await rawrToken.connect(playerAddress).approve(escrow.address, tokenAmount);
             await escrow.connect(executionManagerAddress).deposit(rawrToken.address, 1, playerAddress.address, tokenAmount);
 
-            await escrow.connect(executionManagerAddress)['transferRoyalty(uint256,address,uint256)'](1, creatorAddress.address, ethers.BigNumber.from(1000).mul(_1e18));
+            await escrow.connect(executionManagerAddress)['transferRoyalty(uint256[],address,uint256[])']([1], creatorAddress.address, [ethers.BigNumber.from(1000).mul(_1e18)]);
             
             // check escrowed tokens by order (1)
             expect(await escrow.escrowedTokensByOrder(1)).to.equal(ethers.BigNumber.from(4000).mul(_1e18));
@@ -280,7 +280,7 @@ describe('ERC20 Escrow Contract tests', () => {
             await rawrToken.connect(playerAddress).approve(escrow.address, ethers.BigNumber.from(5000).mul(_1e18));
             await escrow.connect(executionManagerAddress).deposit(rawrToken.address, 1, playerAddress.address, ethers.BigNumber.from(5000).mul(_1e18));
     
-            await escrow.connect(executionManagerAddress)['transferRoyalty(uint256,address,uint256)'](1, creatorAddress.address, ethers.BigNumber.from(1000).mul(_1e18));
+            await escrow.connect(executionManagerAddress)['transferRoyalty(uint256[],address,uint256[])']([1], creatorAddress.address, [ethers.BigNumber.from(1000).mul(_1e18)]);
 
             await escrow.connect(executionManagerAddress).withdraw(1, player2Address.address, ethers.BigNumber.from(4000).mul(_1e18));
     

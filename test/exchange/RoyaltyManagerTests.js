@@ -103,7 +103,7 @@ describe('Royalty Manager Contract', ()=> {
     
         it('Supports the Royalty Manager Interface', async () => {
             // IRoyaltyManager Interface
-            expect(await royaltyManager.supportsInterface("0x96c4ccf4")).to.equal(true);
+            expect(await royaltyManager.supportsInterface("0xd8e8acc2")).to.equal(true);
         });
     });
     
@@ -135,8 +135,8 @@ describe('Royalty Manager Contract', ()=> {
             await rawrToken.connect(playerAddress).approve(escrow.address, ethers.BigNumber.from(10000).mul(_1e18));
             await escrow.connect(testManagerAddress).deposit(rawrToken.address, 1, playerAddress.address, ethers.BigNumber.from(10000).mul(_1e18));
 
-            await royaltyManager['transferRoyalty(uint256,address,uint256)'](1, creatorAddress.address, ethers.BigNumber.from(200).mul(_1e18));
-            await royaltyManager['transferPlatformFee(address,uint256,uint256)'](rawrToken.address, 1, ethers.BigNumber.from(10000).mul(_1e18));
+            await royaltyManager['transferRoyalty(uint256[],address,uint256[])']([1], creatorAddress.address, [ethers.BigNumber.from(200).mul(_1e18)]);
+            await royaltyManager['transferPlatformFee(address,uint256[],uint256[])'](rawrToken.address, [1], [ethers.BigNumber.from(30).mul(_1e18)]);
 
             claimable = await escrow.connect(creatorAddress).claimableTokensByOwner(creatorAddress.address);
             expect(claimable.amounts[0]).to.equal(ethers.BigNumber.from(200).mul(_1e18));
@@ -149,17 +149,41 @@ describe('Royalty Manager Contract', ()=> {
             expect(await feesEscrow.totalFees(rawrToken.address)).to.equal(ethers.BigNumber.from(30).mul(_1e18));
         });
         
-        it('Get Royalties for an asset', async () => {
+        it('Get Royalties for a Buy Order', async () => {
             await ContentContractSetup();
             await RawrTokenSetup();
             await RoyaltyManagerSetup();
             
             var assetData = [content.address, 1];
-            var results = await royaltyManager.payableRoyalties(assetData, ethers.BigNumber.from(10000).mul(_1e18));
+            var amountPerOrder = [ethers.BigNumber.from(10000).mul(_1e18), ethers.BigNumber.from(10000).mul(_1e18)];
+            var results = await royaltyManager.buyOrderRoyalties(assetData, amountPerOrder);
 
             expect(results.receiver).to.equal(creatorAddress.address);
-            expect(results.royaltyFee).to.equal(ethers.BigNumber.from(200).mul(_1e18));
-            expect(results.remaining).to.equal(ethers.BigNumber.from(9770).mul(_1e18));
+            expect(results.royaltyFees.length).to.equal(2);
+            expect(results.royaltyFees[0]).to.equal(ethers.BigNumber.from(200).mul(_1e18));
+            expect(results.royaltyFees[1]).to.equal(ethers.BigNumber.from(200).mul(_1e18));
+            expect(results.platformFees.length).to.equal(2);
+            expect(results.platformFees[0]).to.equal(ethers.BigNumber.from(30).mul(_1e18));
+            expect(results.platformFees[1]).to.equal(ethers.BigNumber.from(30).mul(_1e18));
+            expect(results.remaining.length).to.equal(2);
+            expect(results.remaining[0]).to.equal(ethers.BigNumber.from(9770).mul(_1e18));
+            expect(results.remaining[1]).to.equal(ethers.BigNumber.from(9770).mul(_1e18));
+        });
+
+        it('Get Royalties for a Sell Order', async () => {
+            await ContentContractSetup();
+            await RawrTokenSetup();
+            await RoyaltyManagerSetup();
+            
+            var assetData = [content.address, 1];
+            var amountPerOrder = [ethers.BigNumber.from(10000).mul(_1e18), ethers.BigNumber.from(10000).mul(_1e18)];
+            var results = await royaltyManager.sellOrderRoyalties(assetData, amountPerOrder);
+
+            expect(results.receiver).to.equal(creatorAddress.address);
+            expect(results.royaltyTotal).to.equal(ethers.BigNumber.from(400).mul(_1e18));
+            expect(results.remaining.length).to.equal(2);
+            expect(results.remaining[0]).to.equal(ethers.BigNumber.from(9770).mul(_1e18));
+            expect(results.remaining[1]).to.equal(ethers.BigNumber.from(9770).mul(_1e18));
         });
 
         it('Claim Royalties', async () => {

@@ -50,29 +50,28 @@ contract RoyaltyManager is IRoyaltyManager, ManagerBase {
     }
 
     function transferRoyalty(
-        uint256 _orderId,
+        uint256[] calldata _orderIds,
         address _receiver,
-        uint256 _fee
+        uint256[] calldata _royaltyFees
     ) external override onlyOwner {
         // No need to do checks. these values are returned from requiredRoyalties()
         // This is called in a fill buy order where Tokens are stored in the escrow and need to be "moved"
         // to the "claimable" table for the asset creator
-        if (_fee > 0) {
-            _tokenEscrow().transferRoyalty(_orderId, _receiver, _fee);
-        }
+        _tokenEscrow().transferRoyalty(_orderIds, _receiver, _royaltyFees);
     }
 
     function transferPlatformFee(
         address _token,
-        uint256 _orderId,
-        uint256 _total
+        uint256[] calldata _orderIds,
+        uint256[] calldata platformFees
     ) external override onlyOwner {
-        if (_exchangeFeesEscrow().hasExchangeFees()) {
-            // Rate has to be greater than 0 and there must be someone staking. If no one is staking,
-            // we ignore platform fees because no one will be able to collect it.
-            uint256 feeAmount = (_total * _exchangeFeesEscrow().rate()) / 1e6;
-            _exchangeFeesEscrow().depositFees(_token, feeAmount);
-            _tokenEscrow().transferPlatformFee(_orderId, address(_exchangeFeesEscrow()), feeAmount);
+        for (uint256 i = 0; i < platformFees.length; i++) {    
+            if (_exchangeFeesEscrow().hasExchangeFees()) {
+                // Rate has to be greater than 0 and there must be someone staking. If no one is staking,
+                // we ignore platform fees because no one will be able to collect it.
+                _exchangeFeesEscrow().depositFees(_token, platformFees[i]);
+                _tokenEscrow().transferPlatformFee(_orderIds[i], address(_exchangeFeesEscrow()), platformFees[i]);
+            }
         }
     }
     
@@ -90,25 +89,56 @@ contract RoyaltyManager is IRoyaltyManager, ManagerBase {
         }
     }
 
-    function payableRoyalties(
+    function buyOrderRoyalties(
         LibOrder.AssetData calldata _asset,
-        uint256 _total
-    ) external view override onlyOwner returns(address receiver, uint256 royaltyFee, uint256 remaining) {
-        remaining = _total;
+        uint256[] memory amountPerOrder
+    ) external view override onlyOwner returns(address receiver, uint256[] memory royaltyFees, uint256[] memory platformFees, uint256[] memory remaining) {
+        remaining = new uint256[](amountPerOrder.length);
+        royaltyFees = new uint256[](amountPerOrder.length);
+        platformFees = new uint256[](amountPerOrder.length);
+        for (uint256 i = 0; i < amountPerOrder.length; i++) {
+            if (amountPerOrder[i] > 0) {
+                remaining[i] = amountPerOrder[i];
+                // Get platform fees
+                if (_exchangeFeesEscrow().hasExchangeFees()) {
+                    // Rate has to be greater than 0 and there must be someone staking. If no one is staking,
+                    // we ignore platform fees because no one will be able to collect it.
+                    platformFees[i] = (amountPerOrder[i] * _exchangeFeesEscrow().rate()) / 1e6;
+                    remaining[i] -= platformFees[i];
+                }
 
-        // Get platform fees
-        if (_exchangeFeesEscrow().hasExchangeFees()) {
-            // Rate has to be greater than 0 and there must be someone staking. If no one is staking,
-            // we ignore platform fees because no one will be able to collect it.
-            uint256 platformFees = (_total * _exchangeFeesEscrow().rate()) / 1e6;
-            remaining -= platformFees;
+                if (_asset.contentAddress.supportsInterface(type(IERC2981Upgradeable).interfaceId)) {
+                    (receiver, royaltyFees[i]) = IERC2981Upgradeable(_asset.contentAddress).royaltyInfo(_asset.tokenId, amountPerOrder[i]);
+                    remaining[i] -= royaltyFees[i];
+                }
+            }
         }
+        // If contract doesn't support the NFT royalty standard or IContent interface is not supported, ignore royalties
+    }
 
-        if (_asset.contentAddress.supportsInterface(type(IERC2981Upgradeable).interfaceId)) {
-            (receiver, royaltyFee) = IERC2981Upgradeable(_asset.contentAddress).royaltyInfo(_asset.tokenId, _total);
-            remaining -= royaltyFee;
+    function sellOrderRoyalties(
+        LibOrder.AssetData calldata _asset,
+        uint256[] memory amountPerOrder
+    ) external view override onlyOwner returns(address receiver, uint256 royaltyTotal, uint256[] memory remaining) {
+        remaining = new uint256[](amountPerOrder.length);
+        uint256 royaltyFee;
+        for (uint256 i = 0; i < amountPerOrder.length; i++) {
+            if (amountPerOrder[i] > 0) {
+                remaining[i] = amountPerOrder[i];
+                // Get platform fees
+                if (_exchangeFeesEscrow().hasExchangeFees()) {
+                    // Rate has to be greater than 0 and there must be someone staking. If no one is staking,
+                    // we ignore platform fees because no one will be able to collect it.
+                    remaining[i] -= (amountPerOrder[i] * _exchangeFeesEscrow().rate()) / 1e6;
+                }
+
+                if (_asset.contentAddress.supportsInterface(type(IERC2981Upgradeable).interfaceId)) {
+                    (receiver, royaltyFee) = IERC2981Upgradeable(_asset.contentAddress).royaltyInfo(_asset.tokenId, amountPerOrder[i]);
+                    royaltyTotal += royaltyFee;
+                    remaining[i] -= royaltyFee;
+                }
+            }
         }
-        
         // If contract doesn't support the NFT royalty standard or IContent interface is not supported, ignore royalties
     }
 
