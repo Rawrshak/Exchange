@@ -1,3 +1,4 @@
+const { EtherscanProvider } = require("@ethersproject/providers");
 const { expect } = require("chai");
 const { ethers, upgrades } = require("hardhat");
 
@@ -11,6 +12,7 @@ describe('Royalty Manager Contract', ()=> {
 
     var rawrToken;
     var royaltyManager;
+    var executionManager;
     var escrow;
     const _1e18 = ethers.BigNumber.from('10').pow(ethers.BigNumber.from('18'));
 
@@ -26,6 +28,7 @@ describe('Royalty Manager Contract', ()=> {
         MockToken = await ethers.getContractFactory("MockToken");
         MockStaking = await ethers.getContractFactory("MockStaking");
         Erc20Escrow = await ethers.getContractFactory("Erc20Escrow");
+        ExecutionManager = await ethers.getContractFactory("ExecutionManager");
         ExchangeFeesEscrow = await ethers.getContractFactory("ExchangeFeesEscrow");
         RoyaltyManager = await ethers.getContractFactory("RoyaltyManager");
 
@@ -199,6 +202,45 @@ describe('Royalty Manager Contract', ()=> {
     
             var claimable = await royaltyManager.connect(creatorAddress).claimableRoyalties(creatorAddress.address);
             expect(claimable.amounts.length).to.equal(0);
+        });
+
+        it('Transfer Platform fee from user', async () => {
+            await ContentContractSetup();
+            await RawrTokenSetup();
+            await RoyaltyManagerSetup();
+
+            await rawrToken.connect(playerAddress).approve(escrow.address, ethers.BigNumber.from(30).mul(_1e18));
+            await royaltyManager['transferPlatformFee(address,address,uint256)'](playerAddress.address, rawrToken.address, ethers.BigNumber.from(10000).mul(_1e18));
+            
+            // escrow should have received the fees
+            expect(await feesEscrow.totalFees(rawrToken.address)).to.equal(ethers.BigNumber.from(30).mul(_1e18));
+            expect(await rawrToken.balanceOf(feesEscrow.address)).to.equal(ethers.BigNumber.from(30).mul(_1e18));
+            // playeraddress should have had the fees deducted from their balance
+            expect(await rawrToken.balanceOf(playerAddress.address)).to.equal(ethers.BigNumber.from(19970).mul(_1e18));
+        });
+
+        it('Transfer Platform fee from orderIds', async () => {
+            await ContentContractSetup();
+            await RawrTokenSetup();
+            await RoyaltyManagerSetup();
+
+            // deposit tokens to escrow
+            var tokenAmount = ethers.BigNumber.from(10000).mul(_1e18);
+            await rawrToken.connect(playerAddress).approve(escrow.address, ethers.BigNumber.from(20000).mul(_1e18));
+            await escrow.connect(testManagerAddress).depositBatch(rawrToken.address, [0, 1], playerAddress.address, [tokenAmount, tokenAmount]);
+            
+            // check that escrow has the tokens
+            expect(await escrow.escrowedTokensByOrder(0)).to.equal(tokenAmount);
+            expect(await escrow.escrowedTokensByOrder(1)).to.equal(tokenAmount);
+            expect(await rawrToken.balanceOf(escrow.address)).to.equal(ethers.BigNumber.from(20000).mul(_1e18));
+
+            await royaltyManager['transferPlatformFee(address,uint256[],uint256[])'](rawrToken.address, [0, 1], [ethers.BigNumber.from(30).mul(_1e18), ethers.BigNumber.from(30).mul(_1e18)]);
+
+            // check to see if the tokens have been updated/switched hands
+            expect(await escrow.escrowedTokensByOrder(0)).to.equal(ethers.BigNumber.from(9970).mul(_1e18));
+            expect(await escrow.escrowedTokensByOrder(1)).to.equal(ethers.BigNumber.from(9970).mul(_1e18));
+            expect(await feesEscrow.totalFees(rawrToken.address)).to.equal(ethers.BigNumber.from(60).mul(_1e18));
+            expect(await rawrToken.balanceOf(feesEscrow.address)).to.equal(ethers.BigNumber.from(60).mul(_1e18));
         });
     });
 });

@@ -65,13 +65,15 @@ contract RoyaltyManager is IRoyaltyManager, ManagerBase {
         uint256[] calldata _orderIds,
         uint256[] calldata platformFees
     ) external override onlyOwner {
-        for (uint256 i = 0; i < platformFees.length; i++) {    
-            if (_exchangeFeesEscrow().hasExchangeFees()) {
-                // Rate has to be greater than 0 and there must be someone staking. If no one is staking,
-                // we ignore platform fees because no one will be able to collect it.
-                _exchangeFeesEscrow().depositFees(_token, platformFees[i]);
-                _tokenEscrow().transferPlatformFee(_orderIds[i], address(_exchangeFeesEscrow()), platformFees[i]);
+        if (_exchangeFeesEscrow().hasExchangeFees()) {
+            // Rate has to be greater than 0 and there must be someone staking. If no one is staking,
+            // we ignore platform fees because no one will be able to collect it.
+            uint256 totalFee;
+            for (uint256 i = 0; i < platformFees.length; i++) {    
+                totalFee += platformFees[i];
             }
+            _exchangeFeesEscrow().depositFees(_token, totalFee);
+            _tokenEscrow().transferPlatformFee(_orderIds, address(_exchangeFeesEscrow()), platformFees, totalFee);
         }
     }
     

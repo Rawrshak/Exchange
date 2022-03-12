@@ -52,7 +52,7 @@ describe('ERC20 Escrow Contract tests', () => {
     
         it('Supports the Erc20Escrow Interface', async () => {
             // IErc20Escrow Interface
-            expect(await escrow.supportsInterface("0xb50e494b")).to.equal(true);
+            expect(await escrow.supportsInterface("0x3b05caed")).to.equal(true);
 
             // IEscrowBase Interface
             expect(await escrow.supportsInterface("0xc7aacb62")).to.equal(true);
@@ -264,7 +264,7 @@ describe('ERC20 Escrow Contract tests', () => {
             expect(await rawrToken.balanceOf(platformFeesPoolAddress.address)).to.equal(ethers.BigNumber.from(5000).mul(_1e18));
 
             // transfer platform fee
-            await escrow.connect(executionManagerAddress)['transferPlatformFee(uint256,address,uint256)'](1, platformFeesPoolAddress.address, ethers.BigNumber.from(1000).mul(_1e18));
+            await escrow.connect(executionManagerAddress)['transferPlatformFee(uint256[],address,uint256[],uint256)']([1], platformFeesPoolAddress.address, [ethers.BigNumber.from(1000).mul(_1e18)], ethers.BigNumber.from(1000).mul(_1e18));
 
             // check platform fees pool balance
             expect(await rawrToken.balanceOf(platformFeesPoolAddress.address)).to.equal(ethers.BigNumber.from(6000).mul(_1e18));
