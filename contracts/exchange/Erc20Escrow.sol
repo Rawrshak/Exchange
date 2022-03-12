@@ -67,17 +67,19 @@ contract Erc20Escrow is IErc20Escrow, EscrowBase {
 
     function depositBatch(
         address _token,
-        uint256[] memory _orderIds,
+        uint256[] calldata _orderIds,
         address _sender,
-        uint256[] memory _amounts
+        uint256[] calldata _amounts
     ) external override onlyRole(MANAGER_ROLE) {
         uint256 total;
         for (uint256 i = 0; i < _orderIds.length; i++) {
-            // Update escrowedByOrder for each order
-            escrowedByOrder[_orderIds[i]].token = _token;
-            escrowedByOrder[_orderIds[i]].amount = escrowedByOrder[_orderIds[i]].amount + _amounts[i];
-            // add to total
-            total += _amounts[i];
+            if (_amounts[i] > 0) {    
+                // Update escrowedByOrder for each order
+                escrowedByOrder[_orderIds[i]].token = _token;
+                escrowedByOrder[_orderIds[i]].amount = escrowedByOrder[_orderIds[i]].amount + _amounts[i];
+                // add to total
+                total += _amounts[i];
+            }
         }
         // Send the total amount of tokens to the Escrow
         IERC20Upgradeable(_token).transferFrom(_sender, address(this), total);
@@ -92,6 +94,25 @@ contract Erc20Escrow is IErc20Escrow, EscrowBase {
 
         escrowedByOrder[_orderId].amount = escrowedByOrder[_orderId].amount - _amount;
         IERC20Upgradeable(escrowedByOrder[_orderId].token).transfer(_receiver, _amount);
+    }
+
+    function withdrawBatch(
+        uint256[] calldata _orderIds,
+        address _receiver,
+        uint256[] calldata _amounts
+    ) external override onlyRole(MANAGER_ROLE) {
+        uint256 total;
+        for (uint256 i = 0; i < _orderIds.length; i++) {
+            if (_amounts[i] > 0) {
+                // Update escrowedByOrder for each order
+                require(escrowedByOrder[_orderIds[i]].amount >= _amounts[i], "Invalid amount");
+                escrowedByOrder[_orderIds[i]].amount -= _amounts[i];
+                // add to total
+                total += _amounts[i];
+            }
+        }
+        // Withdraw the total amount of tokens from Escrow
+        IERC20Upgradeable(escrowedByOrder[_orderIds[0]].token).transfer(_receiver, total);
     }
     
     // Deposit Creator Royalties from user to escrow

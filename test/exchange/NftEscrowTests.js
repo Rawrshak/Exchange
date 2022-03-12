@@ -71,7 +71,7 @@ describe('NFT Escrow Contract', () => {
     
         it('Supports the NftEscrow Interface', async () => {
             // INftEscrow Interface
-            expect(await escrow.supportsInterface("0x06265fe7")).to.equal(true);
+            expect(await escrow.supportsInterface("0xbe67b45c")).to.equal(true);
             
             // IERC721ReceiverUpgradeable Interface
             expect(await escrow.supportsInterface("0x150b7a02")).to.equal(true);
@@ -120,6 +120,25 @@ describe('NFT Escrow Contract', () => {
             var internalAssetData = await escrow.escrowedAsset(1);
             expect(internalAssetData[0]).to.equal(assetData[0]);
             expect(internalAssetData[1]).to.equal(assetData[1]);
+        });
+
+        it('Depositing Asset Batch', async () => {
+            await createContentContract();
+    
+            await escrow.connect(executionManagerAddress).depositBatch([0, 1], playerAddress.address, [5, 1], assetData);
+            
+            expect(await escrow.escrowedAmounts(0)).to.equal(5);
+            expect(await escrow.escrowedAmounts(1)).to.equal(1);
+            expect(await content.balanceOf(escrow.address, 0)).to.equal(6);
+            expect(await content.balanceOf(playerAddress.address, 0)).to.equal(4);
+            
+            var internalAssetData = await escrow.escrowedAsset(0);
+            expect(internalAssetData[0]).to.equal(assetData[0]);
+            expect(internalAssetData[1]).to.equal(assetData[1]);
+
+            var internalAssetData2 = await escrow.escrowedAsset(1);
+            expect(internalAssetData2[0]).to.equal(assetData[0]);
+            expect(internalAssetData2[1]).to.equal(assetData[1]);
         });
 
         it('Withdraw Asset', async () => {

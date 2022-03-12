@@ -45,16 +45,10 @@ contract ExecutionManager is IExecutionManager, ManagerBase {
         external override onlyOwner
     {
         require(_orderIds.length == _paymentPerOrder.length && _orderIds.length == _amounts.length, "Invalid input length");
-        
-        for (uint256 i = 0; i < _orderIds.length; ++i) {
-            if (_amounts[i] > 0) {
-                // Send Assets to escrow
-                _nftEscrow().deposit(_orderIds[i], _user, _amounts[i], _asset);
-                
-                // send payment from escrow to user
-                _tokenEscrow().withdraw(_orderIds[i], _user, _paymentPerOrder[i]);
-            }
-        }
+        // Send Assets to escrow
+        _nftEscrow().depositBatch(_orderIds, _user, _amounts, _asset);
+        // send payment from escrow to user
+        _tokenEscrow().withdrawBatch(_orderIds, _user, _paymentPerOrder);
     }
 
     // Send assets from escrow to user, send tokens from user to escrow
@@ -67,11 +61,9 @@ contract ExecutionManager is IExecutionManager, ManagerBase {
         external override onlyOwner
     {
         require(_orderIds.length == _paymentPerOrder.length && _orderIds.length == _amounts.length, "Invalid input length");
-        
         // send payment from user to escrow
         _tokenEscrow().depositBatch(_token, _orderIds, _user, _paymentPerOrder);
-
-        // send asset to buyer
+        // send asset from escrow to buyer
         _nftEscrow().withdrawBatch(_orderIds, _user, _amounts);
     }
 
