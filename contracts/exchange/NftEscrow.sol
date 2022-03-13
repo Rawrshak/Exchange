@@ -51,6 +51,25 @@ contract NftEscrow is INftEscrow, EscrowBase, ERC1155HolderUpgradeable, ERC721Ho
         _transfer(_orderId, _sender, address(this), _amount);
     }
 
+    function depositBatch(
+        uint256[] calldata _orderIds,
+        address _sender,
+        uint256[] calldata _amounts,
+        LibOrder.AssetData memory _assetData
+    ) external override onlyRole(MANAGER_ROLE) {
+        uint256 total;
+        for (uint256 i =0; i < _orderIds.length; i++) {
+            if (_amounts[i] > 0) {
+                // Update mappings for each order
+                escrowedAsset[_orderIds[i]] = _assetData;
+                escrowedAmounts[_orderIds[i]] = escrowedAmounts[_orderIds[i]] + _amounts[i];
+                // tally up total amount of assets
+                total += _amounts[i];
+            }
+        }
+        _transfer(_orderIds[0], _sender, address(this), total);
+    }
+
     // withdraw() and withdrawBatch() is called when a user buys an escrowed asset, a seller cancels an order 
     // and withdraw's their escrowed asset, or a buyer's order is filled and claims the escrowed asset.
     function withdraw(

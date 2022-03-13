@@ -52,7 +52,7 @@ describe('ERC20 Escrow Contract tests', () => {
     
         it('Supports the Erc20Escrow Interface', async () => {
             // IErc20Escrow Interface
-            expect(await escrow.supportsInterface("0x3b05caed")).to.equal(true);
+            expect(await escrow.supportsInterface("0x59a8d60b")).to.equal(true);
 
             // IEscrowBase Interface
             expect(await escrow.supportsInterface("0xc7aacb62")).to.equal(true);
@@ -96,7 +96,7 @@ describe('ERC20 Escrow Contract tests', () => {
             expect(await rawrToken.balanceOf(escrow.address)).to.equal(tokenAmount);
         });
 
-        it('Deposit multiple batches of Rawr tokens', async () => {
+        it('Deposit multiple orders of Rawr tokens', async () => {
             await setup();
     
             // Allow rawr tokens to be escrowed
@@ -131,6 +131,31 @@ describe('ERC20 Escrow Contract tests', () => {
             expect(await rawrToken.balanceOf(escrow.address)).to.equal(0);
             expect(await rawrToken.balanceOf(playerAddress.address)).to.equal(ethers.BigNumber.from(20000).mul(_1e18));
         });
+
+        it('Withdraw multiple orders of Rawr tokens', async () => {
+            await setup();
+    
+            // Allow rawr tokens to be escrowed
+            var tokenAmount = ethers.BigNumber.from(10000).mul(_1e18);
+            var tokenAmount2 = ethers.BigNumber.from(10000).mul(_1e18);
+            await rawrToken.connect(playerAddress).approve(escrow.address, ethers.BigNumber.from(20000).mul(_1e18));
+            
+            await escrow.connect(executionManagerAddress).depositBatch(rawrToken.address, [0, 1], playerAddress.address, [tokenAmount, tokenAmount2]);
+
+            // playerAddress should have zero tokens left
+            expect(await rawrToken.balanceOf(playerAddress.address)).to.equal(0);
+    
+            // After moving assets to the escrow
+            expect(await rawrToken.balanceOf(escrow.address)).to.equal(ethers.BigNumber.from(20000).mul(_1e18));
+    
+            await escrow.connect(executionManagerAddress).withdrawBatch([0, 1], playerAddress.address, [tokenAmount, tokenAmount2]);
+    
+            // check escrowed tokens by order (1)
+            expect(await escrow.escrowedTokensByOrder(0)).to.equal(0);
+            expect(await escrow.escrowedTokensByOrder(1)).to.equal(0);
+            expect(await rawrToken.balanceOf(escrow.address)).to.equal(0);
+            expect(await rawrToken.balanceOf(playerAddress.address)).to.equal(ethers.BigNumber.from(20000).mul(_1e18));
+        });
         
         it('Withdraw 10000 RAWR tokens from player address in 2 transactions', async () => {
             await setup();
@@ -154,12 +179,14 @@ describe('ERC20 Escrow Contract tests', () => {
     
             // Allow rawr tokens to be escrowed
             var tokenAmount = ethers.BigNumber.from(5000).mul(_1e18);
-            await rawrToken.connect(playerAddress).approve(escrow.address, tokenAmount);
-            await escrow.connect(executionManagerAddress).deposit(rawrToken.address, 1, playerAddress.address, tokenAmount);
+            await rawrToken.connect(playerAddress).approve(escrow.address, ethers.BigNumber.from(10000).mul(_1e18));
+            await escrow.connect(executionManagerAddress).depositBatch(rawrToken.address, [0, 1], playerAddress.address, [tokenAmount, tokenAmount]);
     
-            await expect(escrow.connect(executionManagerAddress).withdraw(1, playerAddress, web3.utils.toWei('10000', 'ether'))).to.be.reverted;
+            await expect(escrow.connect(executionManagerAddress).withdraw(1, playerAddress.address, web3.utils.toWei('10000', 'ether'))).to.be.reverted;
+            await expect(escrow.connect(executionManagerAddress).withdrawBatch([0, 1], playerAddress.address, [web3.utils.toWei('4000', 'ether'), web3.utils.toWei('10000', 'ether')])).to.be.reverted;
 
-            // check escrowed tokens by order (1)
+            // check escrowed tokens by order (0) and (1)
+            expect(await escrow.escrowedTokensByOrder(0)).to.equal(tokenAmount);
             expect(await escrow.escrowedTokensByOrder(1)).to.equal(tokenAmount);
         });
     });
