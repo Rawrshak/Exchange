@@ -96,7 +96,7 @@ describe('ERC20 Escrow Contract tests', () => {
             expect(await rawrToken.balanceOf(escrow.address)).to.equal(tokenAmount);
         });
 
-        it('Deposit multiple batches of Rawr tokens', async () => {
+        it('Deposit multiple orders of Rawr tokens', async () => {
             await setup();
     
             // Allow rawr tokens to be escrowed
@@ -132,7 +132,7 @@ describe('ERC20 Escrow Contract tests', () => {
             expect(await rawrToken.balanceOf(playerAddress.address)).to.equal(ethers.BigNumber.from(20000).mul(_1e18));
         });
 
-        it('Withdraw multiple batches of Rawr tokens', async () => {
+        it('Withdraw multiple orders of Rawr tokens', async () => {
             await setup();
     
             // Allow rawr tokens to be escrowed
