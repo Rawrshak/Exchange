@@ -169,11 +169,18 @@ describe('NFT Escrow Contract', () => {
             await escrow.connect(executionManagerAddress).deposit(1, playerAddress.address, 1, assetData);
             await escrow.connect(executionManagerAddress).deposit(2, playerAddress.address, 3, assetData);
             await escrow.connect(executionManagerAddress).deposit(3, playerAddress.address, 2, assetData);
+
+            expect(await content.balanceOf(playerAddress.address, 0)).to.equal(4);
+            expect(await escrow.escrowedAmounts(1)).to.equal(1);
+            expect(await escrow.escrowedAmounts(2)).to.equal(3);
+            expect(await escrow.escrowedAmounts(3)).to.equal(2);
             
             var orders = [1,2,3];
             var amounts = [1,3,1];
             await escrow.connect(executionManagerAddress).withdrawBatch(orders, playerAddress.address, amounts);
-    
+            
+            expect(await content.balanceOf(playerAddress.address, 0)).to.equal(9);
+            expect(await escrow.escrowedAmounts(1)).to.equal(0);
             expect(await escrow.escrowedAmounts(2)).to.equal(0);
             expect(await escrow.escrowedAmounts(3)).to.equal(1);
         });

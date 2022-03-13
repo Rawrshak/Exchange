@@ -27,6 +27,6 @@ interface INftEscrow {
 
     function withdraw(uint256 orderId, address _receiver, uint256 amount) external;
 
-    function withdrawBatch(uint256[] memory orderIds, address _receiver, uint256[] memory amounts) external;
+    function withdrawBatch(uint256[] calldata _orderIds, address _receiver, uint256[] calldata _amounts) external;
 
 }
