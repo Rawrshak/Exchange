@@ -91,21 +91,36 @@ contract NftEscrow is INftEscrow, EscrowBase, ERC1155HolderUpgradeable, ERC721Ho
     }
 
     function withdrawBatch(
-        uint256[] memory _orderIds,
+        uint256[] calldata _orderIds,
         address _receiver,
-        uint256[] memory _amounts
+        uint256[] calldata _amounts
     ) external override onlyRole(MANAGER_ROLE) {
+        uint256 total;
+        address contractAddress;
+        uint256 tokenId;
         for (uint256 i = 0; i < _orderIds.length; ++i) {
-            escrowedAmounts[_orderIds[i]] = escrowedAmounts[_orderIds[i]] - _amounts[i];
-            _transfer(_orderIds[i], address(this), _receiver, _amounts[i]);
-            
-            // Delete if order is filled; Gas Refund
-            // We don't need to store how much was escrowed because we keep track of the order data in 
-            // the orderbook.
-            if (escrowedAmounts[_orderIds[i]] == 0) {
-                delete escrowedAmounts[_orderIds[i]];
-                delete escrowedAsset[_orderIds[i]];
+            if (_amounts[i] > 0) {
+                // update mapping for each order
+                escrowedAmounts[_orderIds[i]] = escrowedAmounts[_orderIds[i]] - _amounts[i];
+                // tally up the total amount of assets
+                total += _amounts[i];
+                // grab contract address and tokenId for transfer
+                if (contractAddress == address(0)) {
+                    contractAddress = escrowedAsset[_orderIds[i]].contentAddress;
+                    tokenId = escrowedAsset[_orderIds[i]].tokenId;
+                }
+                // Delete if order is filled; Gas Refund
+                // We don't need to store how much was escrowed because we keep track of the order data in 
+                // the orderbook.
+                if (escrowedAmounts[_orderIds[i]] == 0) {
+                    delete escrowedAmounts[_orderIds[i]];
+                    delete escrowedAsset[_orderIds[i]];
+                }
             }
+        }
+        if (contractAddress != address(0)) {
+            IERC1155Upgradeable(contractAddress)
+                .safeTransferFrom(address(this), _receiver, tokenId, total, "");
         }
     }
 
