@@ -13,10 +13,7 @@ interface IOrderbook {
         uint256[] memory _orderIds
     ) external view returns (bool);
 
-    function verifyAllOrdersData(
-        uint256[] memory _orderIds,
-        bool _isBuyOrder
-    ) external view returns (bool);
+    function verifyAllOrdersData(uint256[] memory _orderIds) external view returns (bool);
 
     function verifyOrderOwners(
         uint256[] memory _orderIds,

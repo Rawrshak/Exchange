@@ -59,9 +59,9 @@ describe('Orderbook Contract tests', () => {
       expect(orderbook.address).not.equal(ethers.constants.AddressZero);
     });
 
-    it('Supports the Address resolver Interface', async () => {
+    it('Supports the Orderbook Interface', async () => {
       // IOrderbook Interface
-      expect(await orderbook.supportsInterface("0x2a24311c")).to.equal(true);
+      expect(await orderbook.supportsInterface("0x8af5cda4")).to.equal(true);
     });
   });
 
@@ -190,13 +190,50 @@ describe('Orderbook Contract tests', () => {
     });
 
     it('Verifies orders are of the same asset', async () => {
+      orderData4 = [
+        [contentAddress.address, 2],
+        creatorAddress.address,
+        rawrTokenAddress.address,
+        ethers.BigNumber.from(2000).mul(_1e18),
+        2,
+        false
+      ];
+      orderData5 = [
+        [contentAddress.address, 2],
+        creatorAddress.address,
+        rawrTokenAddress.address,
+        ethers.BigNumber.from(3000).mul(_1e18),
+        3,
+        false
+      ];
+      
       id = await orderbook.ordersLength();
       await orderbook.placeOrder(orderData1);
+      id2 = await orderbook.ordersLength();
+      await orderbook.placeOrder(orderData2);
+      id3 = await orderbook.ordersLength();
+      await orderbook.placeOrder(orderData3);
+      id4 = await orderbook.ordersLength();
+      await orderbook.placeOrder(orderData4);
+      id5 = await orderbook.ordersLength();
+      await orderbook.placeOrder(orderData5);
+
+      expect(await orderbook.verifyOrdersExist([id, id3])).is.equal(true);
+      expect(await orderbook.verifyOrdersExist([id2, id4, id5])).is.equal(true);
+      expect(await orderbook.verifyAllOrdersData([id, id3])).is.equal(true);
+      expect(await orderbook.verifyAllOrdersData([id2, id4, id5])).is.equal(true);
+    });
+
+    it('Invalid Order Data', async () => {      
+      id = await orderbook.ordersLength();
+      await orderbook.placeOrder(orderData1);
+      id2 = await orderbook.ordersLength();
+      await orderbook.placeOrder(orderData2);
       id3 = await orderbook.ordersLength();
       await orderbook.placeOrder(orderData3);
 
-      expect(await orderbook.verifyOrdersExist([id, id3])).is.equal(true);
-      expect(await orderbook.verifyAllOrdersData([id, id3], true)).is.equal(true);
+      expect(await orderbook.verifyOrdersExist([id, id3, id2])).is.equal(true);
+      expect(await orderbook.verifyAllOrdersData([id, id3, id2])).is.equal(false);
     });
   });
 
