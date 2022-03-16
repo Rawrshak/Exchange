@@ -92,15 +92,14 @@ contract Orderbook is IOrderbook, ManagerBase {
     }
 
     function verifyAllOrdersData(
-        uint256[] memory _orderIds,
-        bool _isBuyOrder
+        uint256[] memory _orderIds
     ) external view override onlyOwner returns (bool) {
         LibOrder.Order memory firstOrder = orders[_orderIds[0]];
         for (uint256 i = 0; i < _orderIds.length; ++i) {
             if (orders[_orderIds[i]].asset.contentAddress != firstOrder.asset.contentAddress || 
                 orders[_orderIds[i]].asset.tokenId != firstOrder.asset.tokenId ||
                 orders[_orderIds[i]].token != firstOrder.token ||
-                orders[_orderIds[i]].isBuyOrder != _isBuyOrder) {
+                orders[_orderIds[i]].isBuyOrder != firstOrder.isBuyOrder) {
                 return false;
             }
         }
