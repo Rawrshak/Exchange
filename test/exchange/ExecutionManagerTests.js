@@ -114,7 +114,7 @@ describe('Execution Manager Contract Tests', ()=> {
     
         it('Supports the Execution Manager Interface', async () => {
             // IExecutionManager Interface
-            expect(await executionManager.supportsInterface("0x0f1fb8dd")).to.equal(true);
+            expect(await executionManager.supportsInterface("0xa903a056")).to.equal(true);
         });
         
         it('Verify Escrows and token address', async () => {

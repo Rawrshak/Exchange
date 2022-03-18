@@ -132,7 +132,7 @@ describe('Exchange Contract', () => {
 
     it('Supports the Exchange Interface', async () => {
         // IExchange Interface
-        expect(await exchange.supportsInterface("0x28b3c9fb")).to.equal(true);
+        expect(await exchange.supportsInterface("0x0b4f74cf")).to.equal(true);
     });
   });
 
