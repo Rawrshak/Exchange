@@ -217,7 +217,7 @@ describe('ERC20 Escrow Contract tests', () => {
             await rawrToken.connect(playerAddress).approve(escrow.address, tokenAmount);
             await escrow.connect(executionManagerAddress).deposit(rawrToken.address, 1, playerAddress.address, tokenAmount);
 
-            await escrow.connect(executionManagerAddress)['transferRoyalty(uint256[],address,uint256[])']([1], creatorAddress.address, [ethers.BigNumber.from(1000).mul(_1e18)]);
+            await escrow.connect(executionManagerAddress)['transferRoyalty(uint256,address,uint256)'](1, creatorAddress.address, ethers.BigNumber.from(1000).mul(_1e18));
             
             // check escrowed tokens by order (1)
             expect(await escrow.escrowedTokensByOrder(1)).to.equal(ethers.BigNumber.from(4000).mul(_1e18));
@@ -225,6 +225,28 @@ describe('ERC20 Escrow Contract tests', () => {
             // check claimable tokens for player 1
             var claimable = await escrow.claimableTokensByOwner(creatorAddress.address);
             expect(claimable.amounts[0]).to.equal(ethers.BigNumber.from(1000).mul(_1e18));
+        });
+
+        it('Transfer Multiple Royalties from escrow to claimable', async () => {
+            await setup();
+            
+            var tokenAmount = ethers.BigNumber.from(5000).mul(_1e18);
+            var royaltyFees = [ethers.BigNumber.from(1000).mul(_1e18), ethers.BigNumber.from(1000).mul(_1e18), ethers.BigNumber.from(1000).mul(_1e18)]
+            await rawrToken.connect(playerAddress).approve(escrow.address, ethers.BigNumber.from(15000).mul(_1e18));
+            await escrow.connect(executionManagerAddress).deposit(rawrToken.address, 1, playerAddress.address, tokenAmount);
+            await escrow.connect(executionManagerAddress).deposit(rawrToken.address, 2, playerAddress.address, tokenAmount);
+            await escrow.connect(executionManagerAddress).deposit(rawrToken.address, 3, playerAddress.address, tokenAmount);
+
+            await escrow.connect(executionManagerAddress)['transferRoyalty(uint256[],address,uint256[])']([1, 2, 3], creatorAddress.address, royaltyFees);
+            
+            // check escrowed tokens by order (1)
+            expect(await escrow.escrowedTokensByOrder(1)).to.equal(ethers.BigNumber.from(4000).mul(_1e18));
+            expect(await escrow.escrowedTokensByOrder(2)).to.equal(ethers.BigNumber.from(4000).mul(_1e18));
+            expect(await escrow.escrowedTokensByOrder(3)).to.equal(ethers.BigNumber.from(4000).mul(_1e18));
+
+            // check claimable tokens for player 1
+            var claimable = await escrow.claimableTokensByOwner(creatorAddress.address);
+            expect(claimable.amounts[0]).to.equal(ethers.BigNumber.from(3000).mul(_1e18));
         });
 
         it('Claim Royalty', async () => {
@@ -298,6 +320,15 @@ describe('ERC20 Escrow Contract tests', () => {
             
             // check platform fees pool balance
             expect(await rawrToken.balanceOf(escrow.address)).to.equal(ethers.BigNumber.from(4000).mul(_1e18));
+
+            // transfer platform fee
+            await escrow.connect(executionManagerAddress)['transferPlatformFee(uint256,address,uint256)'](1, platformFeesPoolAddress.address, ethers.BigNumber.from(1000).mul(_1e18));
+
+            // check platform fees pool balance
+            expect(await rawrToken.balanceOf(platformFeesPoolAddress.address)).to.equal(ethers.BigNumber.from(7000).mul(_1e18));
+            
+            // check platform fees pool balance
+            expect(await rawrToken.balanceOf(escrow.address)).to.equal(ethers.BigNumber.from(3000).mul(_1e18));
         });
     });
 

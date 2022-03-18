@@ -8,6 +8,11 @@ interface IRoyaltyManager {
 
     function claimableRoyalties(address _user) external view returns(address[] memory tokens, uint256[] memory amounts);
 
+    function payableRoyalties(
+        LibOrder.AssetData calldata _asset,
+        uint256 _total
+    ) external view returns(address receiver, uint256 royaltyFee, uint256 remaining);
+    
     function buyOrderRoyalties(
         LibOrder.AssetData calldata _asset,
         uint256[] memory amountPerOrder
@@ -34,7 +39,15 @@ interface IRoyaltyManager {
         uint256[] calldata _royaltyFees
     ) external;
 
+    function transferRoyalty(
+        uint256 _orderId,
+        address _receiver,
+        uint256 _fee
+    ) external;
+
     function transferPlatformFee(address _sender, address _token, uint256 _total) external;
 
     function transferPlatformFee(address _token, uint256[] calldata _orderIds, uint256[] memory platformFees) external;
+
+    function transferPlatformFee(address _token, uint256 _orderId, uint256 _total) external;
 }

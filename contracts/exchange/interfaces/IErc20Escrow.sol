@@ -22,7 +22,7 @@ interface IErc20Escrow {
     function withdraw(uint256 _orderId, address _user, uint256 _amount) external;
 
     function withdrawBatch(uint256[] calldata _orderIds, address _receiver, uint256[] calldata _amounts) external;
-    
+
     function transferRoyalty(address _token, address _sender, address _owner, uint256 _amount) external;
 
     function transferRoyalty(
@@ -30,6 +30,8 @@ interface IErc20Escrow {
         address _owner,
         uint256[] calldata _amounts
     ) external;
+    
+    function transferRoyalty(uint256 _orderId, address _owner, uint256 _amount) external;
     
     function transferPlatformFee(address _token, address _sender, address _feesEscrow, uint256 _amount) external;
 
@@ -39,6 +41,8 @@ interface IErc20Escrow {
         uint256[] calldata _platformFees, 
         uint256 totalFee
     ) external;
+
+    function transferPlatformFee(uint256 _orderId, address _feesEscrow, uint256 _amount) external;
 
     function claimRoyalties(address _owner) external;
 

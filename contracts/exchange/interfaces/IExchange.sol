@@ -18,6 +18,12 @@ interface IExchange {
     /******** Mutative Functions ********/
     function placeOrder(LibOrder.OrderInput memory _order) external; 
     
+    function fillOrder(
+        uint256 _orderId,
+        uint256 amountToFill,
+        uint256 maxSpend
+    ) external;
+
     function fillOrderBatch(
         uint256[] memory _orderIds,
         uint256 amountToFill,

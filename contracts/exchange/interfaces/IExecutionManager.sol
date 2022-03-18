@@ -20,13 +20,29 @@ interface IExecutionManager {
 
     function executeBuyOrder(
         address _user,
+        uint256 _orderId,
+        uint256 _paymentForOrder,
+        uint256 _amount,
+        LibOrder.AssetData calldata _asset) 
+        external;
+
+    function executeBuyOrderBatch(
+        address _user,
         uint256[] calldata _orderIds,
         uint256[] calldata _paymentPerOrder,
         uint256[] calldata _amounts,
         LibOrder.AssetData calldata _asset) 
         external;
-
+    
     function executeSellOrder(
+        address _user,
+        uint256 _orderIs,
+        uint256 _paymentForOrder,
+        uint256 _amount,
+        address _token)
+        external;
+
+    function executeSellOrderBatch(
         address _user,
         uint256[] calldata _orderIds,
         uint256[] calldata _paymentPerOrder,
