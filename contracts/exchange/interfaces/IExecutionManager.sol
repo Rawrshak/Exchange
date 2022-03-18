@@ -33,7 +33,7 @@ interface IExecutionManager {
         uint256[] calldata _amounts,
         LibOrder.AssetData calldata _asset) 
         external;
-    
+
     function executeSellOrder(
         address _user,
         uint256 _orderIs,
