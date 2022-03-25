@@ -106,7 +106,7 @@ describe('Royalty Manager Contract', ()=> {
     
         it('Supports the Royalty Manager Interface', async () => {
             // IRoyaltyManager Interface
-            expect(await royaltyManager.supportsInterface("0x28be074c")).to.equal(true);
+            expect(await royaltyManager.supportsInterface("0x93881355")).to.equal(true);
         });
     });
     
@@ -164,8 +164,8 @@ describe('Royalty Manager Contract', ()=> {
             await rawrToken.connect(playerAddress).approve(escrow.address, ethers.BigNumber.from(10000).mul(_1e18));
             await escrow.connect(testManagerAddress).depositBatch(rawrToken.address, [1, 2], playerAddress.address, amounts);
 
-            await royaltyManager['transferRoyalty(uint256[],address,uint256[])']([1, 2], creatorAddress.address, royaltyFees);
-            await royaltyManager['transferPlatformFee(address,uint256[],uint256[])'](rawrToken.address, [1, 2], platformFees);
+            await royaltyManager.transferRoyalties([1, 2], creatorAddress.address, royaltyFees);
+            await royaltyManager.transferPlatformFees(rawrToken.address, [1, 2], platformFees);
 
             claimable = await escrow.connect(creatorAddress).claimableTokensByOwner(creatorAddress.address);
             expect(claimable.amounts[0]).to.equal(ethers.BigNumber.from(200).mul(_1e18));
@@ -293,7 +293,7 @@ describe('Royalty Manager Contract', ()=> {
             expect(await escrow.escrowedTokensByOrder(1)).to.equal(tokenAmount);
             expect(await rawrToken.balanceOf(escrow.address)).to.equal(ethers.BigNumber.from(20000).mul(_1e18));
 
-            await royaltyManager['transferPlatformFee(address,uint256[],uint256[])'](rawrToken.address, [0, 1], [ethers.BigNumber.from(30).mul(_1e18), ethers.BigNumber.from(30).mul(_1e18)]);
+            await royaltyManager.transferPlatformFees(rawrToken.address, [0, 1], [ethers.BigNumber.from(30).mul(_1e18), ethers.BigNumber.from(30).mul(_1e18)]);
 
             // check to see if the tokens have been updated/switched hands
             expect(await escrow.escrowedTokensByOrder(0)).to.equal(ethers.BigNumber.from(9970).mul(_1e18));

@@ -33,7 +33,7 @@ interface IRoyaltyManager {
         uint256 _royaltyFee
     ) external;
 
-    function transferRoyalty(
+    function transferRoyalties(
         uint256[] calldata _orderIds,
         address _receiver,
         uint256[] calldata _royaltyFees
@@ -47,7 +47,7 @@ interface IRoyaltyManager {
 
     function transferPlatformFee(address _sender, address _token, uint256 _total) external;
 
-    function transferPlatformFee(address _token, uint256[] calldata _orderIds, uint256[] memory platformFees) external;
+    function transferPlatformFees(address _token, uint256[] calldata _orderIds, uint256[] memory platformFees) external;
 
     function transferPlatformFee(address _token, uint256 _orderId, uint256 _total) external;
 }

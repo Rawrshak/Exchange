@@ -61,7 +61,7 @@ describe('Orderbook Contract tests', () => {
 
     it('Supports the Orderbook Interface', async () => {
       // IOrderbook Interface
-      expect(await orderbook.supportsInterface("0x8af5cda4")).to.equal(true);
+      expect(await orderbook.supportsInterface("0xc54accc8")).to.equal(true);
     });
   });
 
@@ -218,6 +218,8 @@ describe('Orderbook Contract tests', () => {
       id5 = await orderbook.ordersLength();
       await orderbook.placeOrder(orderData5);
 
+      expect(await orderbook.verifyOrderExists(id)).is.equal(true);
+      expect(await orderbook.verifyOrderExists(id3)).is.equal(true);
       expect(await orderbook.verifyOrdersExist([id, id3])).is.equal(true);
       expect(await orderbook.verifyOrdersExist([id2, id4, id5])).is.equal(true);
       expect(await orderbook.verifyAllOrdersData([id, id3])).is.equal(true);
@@ -232,6 +234,7 @@ describe('Orderbook Contract tests', () => {
       id3 = await orderbook.ordersLength();
       await orderbook.placeOrder(orderData3);
 
+      expect(await orderbook.verifyOrderExists(id4)).is.equal(false);
       expect(await orderbook.verifyOrdersExist([id, id3, id2])).is.equal(true);
       expect(await orderbook.verifyAllOrdersData([id, id3, id2])).is.equal(false);
     });
@@ -254,11 +257,21 @@ describe('Orderbook Contract tests', () => {
 
       // Expect amounts filled to equal 6
       expect(amounts[1]).is.equal(6);
+
+      // single order Id transaction
+      var amount = await orderbook.getOrderAmount(id, 5, ethers.BigNumber.from(50000).mul(_1e18));
+
+      // Expect orderAmount to equal 5 and volume to equal 50000
+      expect(amount[0]).is.equal(5);
+      expect(amount[1]).is.equal(ethers.BigNumber.from(50000).mul(_1e18));
     });
 
     it('Get Order Amounts with small AmountToFill', async () => {
       id = await orderbook.ordersLength();
       await orderbook.placeOrder(orderData1);
+
+      id2 = await orderbook.ordersLength();
+      await orderbook.placeOrder(orderData2);
   
       id3 = await orderbook.ordersLength();
       await orderbook.placeOrder(orderData3);
@@ -271,6 +284,13 @@ describe('Orderbook Contract tests', () => {
 
       // Expect amounts filled to equal 3
       expect(amounts[1]).is.equal(3);
+
+      // single order Id transaction
+      var amount = await orderbook.getOrderAmount(id2, 3, ethers.BigNumber.from(25000).mul(_1e18));
+
+      // Expect orderAmount to equal 3 and volume to equal 15000
+      expect(amount[0]).is.equal(3);
+      expect(amount[1]).is.equal(ethers.BigNumber.from(15000).mul(_1e18));
     });
 
     it('Get Order Amounts with small MaxSpend', async () => {
@@ -288,6 +308,13 @@ describe('Orderbook Contract tests', () => {
 
       // Expect amounts filled to equal 4
       expect(amounts[1]).is.equal(4);
+
+      // single order Id transaction
+      var amount = await orderbook.getOrderAmount(id3, 3, ethers.BigNumber.from(4000).mul(_1e18));
+
+      // Expect orderAmount to equal 2 and volume to equal 4000
+      expect(amount[0]).is.equal(2);
+      expect(amount[1]).is.equal(ethers.BigNumber.from(4000).mul(_1e18));
     });
 
     it('Get Order Amounts with non-exact MaxSpend', async () => {
@@ -305,6 +332,34 @@ describe('Orderbook Contract tests', () => {
 
       // Expect amounts filled to equal 2
       expect(amounts[1]).is.equal(2);
+
+      // single order Id transaction
+      var amount = await orderbook.getOrderAmount(id, 4, ethers.BigNumber.from(33333).mul(_1e18));
+
+      // Expect orderAmount to equal 4 and volume to equal 30000
+      expect(amount[0]).is.equal(3);
+      expect(amount[1]).is.equal(ethers.BigNumber.from(30000).mul(_1e18));
+    });
+
+    it('Invalid Order Amount', async () => {
+      id = await orderbook.ordersLength();
+      await orderbook.placeOrder(orderData1);
+
+      id2 = await orderbook.ordersLength();
+      await orderbook.placeOrder(orderData2);
+  
+      id3 = await orderbook.ordersLength();
+      await orderbook.placeOrder(orderData3);
+
+      // change order state of orderId 2 to CANCELLED
+      await orderbook.cancelOrders([id2]);
+
+      // filled/cancelled orders should produce an order amount of 0 which reverts the transaction
+      await expect(orderbook.getOrderAmount(id2, 5, ethers.BigNumber.from(25000).mul(_1e18))).to.be.reverted;
+
+      await expect(orderbook.getOrderAmount(id, 0, ethers.BigNumber.from(50000).mul(_1e18))).to.be.reverted;
+
+      await expect(orderbook.getOrderAmount(id3, 3, ethers.BigNumber.from(1500).mul(_1e18))).to.be.reverted;
     });
 
     it('Get Payment totals', async () => {
@@ -325,7 +380,25 @@ describe('Orderbook Contract tests', () => {
       expect(paymentTotals[1][1]).is.equal(ethers.BigNumber.from(6000).mul(_1e18));
     });
 
-    it('Fill Orders', async () => {
+    it('Fill Single Orders', async () => {
+      id = await orderbook.ordersLength();
+      await orderbook.placeOrder(orderData1);
+      id3 = await orderbook.ordersLength();
+      await orderbook.placeOrder(orderData3);
+
+      await orderbook.fillOrder(id, 4);
+      await orderbook.fillOrder(id3, 3);
+
+      storedOrder = await orderbook.getOrder(id);
+      expect(storedOrder.amountFilled).is.equal(4);
+      expect(storedOrder.state).is.equal(1); // State.PARTIALLY_FILLED
+
+      storedOrder = await orderbook.getOrder(id3);
+      expect(storedOrder.amountFilled).is.equal(3);
+      expect(storedOrder.state).is.equal(2); // State.FILLED
+    });
+
+    it('Fill Multiple Orders', async () => {
       id = await orderbook.ordersLength();
       await orderbook.placeOrder(orderData1);
       id3 = await orderbook.ordersLength();

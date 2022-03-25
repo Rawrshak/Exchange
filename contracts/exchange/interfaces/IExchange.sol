@@ -50,6 +50,14 @@ interface IExchange {
         uint256 totalAssetsAmount,
         uint256 volume);
 
+    event OrderFilled(
+        address indexed from,
+        uint256 orderId,
+        uint256 amount,
+        LibOrder.AssetData asset,
+        address token,
+        uint256 volume);
+
     event OrdersDeleted(address indexed owner, uint256[] orderIds);
     
     event OrdersClaimed(address indexed owner, uint256[] orderIds);

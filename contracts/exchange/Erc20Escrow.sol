@@ -132,24 +132,14 @@ contract Erc20Escrow is IErc20Escrow, EscrowBase {
     }
 
     // Transfer Creator Royalty from escrowed buy order (multiple ids) to escrow
-    function transferRoyalty(
+    function transferRoyalties(
         uint256[] calldata _orderIds,
         address _owner,
         uint256[] calldata _amounts
     ) external override onlyRole(MANAGER_ROLE) {        
         for (uint256 i = 0; i < _orderIds.length; i++) {
             if (_amounts[i] > 0) {
-                require(escrowedByOrder[_orderIds[i]].amount >= _amounts[i], "Invalid royalty amount");
-
-                // No need to do checks. The exchange contracts will do the checks.
-                address token = escrowedByOrder[_orderIds[i]].token;
-                escrowedByOrder[_orderIds[i]].amount = escrowedByOrder[_orderIds[i]].amount - _amounts[i];
-
-                if (!claimableByOwner[_owner].contains(token)) {
-                    claimableByOwner[_owner].set(token, _amounts[i]);
-                } else {
-                    claimableByOwner[_owner].set(token, claimableByOwner[_owner].get(token) + _amounts[i]);
-                }
+                transferRoyalty(_orderIds[i], _owner, _amounts[i]);
             }
         }
     }
@@ -159,7 +149,7 @@ contract Erc20Escrow is IErc20Escrow, EscrowBase {
         uint256 _orderId,
         address _owner,
         uint256 _amount
-    ) external override onlyRole(MANAGER_ROLE) {        
+    ) public override onlyRole(MANAGER_ROLE) {        
         require(escrowedByOrder[_orderId].amount >= _amount, "Invalid royalty amount");
 
         // No need to do checks. The exchange contracts will do the checks.
@@ -180,7 +170,7 @@ contract Erc20Escrow is IErc20Escrow, EscrowBase {
     }
 
     // Transfer Platform fees from escrowed by order (multiple ids) to escrow
-    function transferPlatformFee(
+    function transferPlatformFees(
         uint256[] calldata _orderIds, 
         address _feesEscrow, 
         uint256[] calldata _platformFees, 

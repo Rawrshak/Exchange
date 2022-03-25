@@ -52,7 +52,7 @@ describe('ERC20 Escrow Contract tests', () => {
     
         it('Supports the Erc20Escrow Interface', async () => {
             // IErc20Escrow Interface
-            expect(await escrow.supportsInterface("0xb2ed33e7")).to.equal(true);
+            expect(await escrow.supportsInterface("0x4f232e83")).to.equal(true);
 
             // IEscrowBase Interface
             expect(await escrow.supportsInterface("0xc7aacb62")).to.equal(true);
@@ -237,7 +237,7 @@ describe('ERC20 Escrow Contract tests', () => {
             await escrow.connect(executionManagerAddress).deposit(rawrToken.address, 2, playerAddress.address, tokenAmount);
             await escrow.connect(executionManagerAddress).deposit(rawrToken.address, 3, playerAddress.address, tokenAmount);
 
-            await escrow.connect(executionManagerAddress)['transferRoyalty(uint256[],address,uint256[])']([1, 2, 3], creatorAddress.address, royaltyFees);
+            await escrow.connect(executionManagerAddress).transferRoyalties([1, 2, 3], creatorAddress.address, royaltyFees);
             
             // check escrowed tokens by order (1)
             expect(await escrow.escrowedTokensByOrder(1)).to.equal(ethers.BigNumber.from(4000).mul(_1e18));
@@ -303,32 +303,33 @@ describe('ERC20 Escrow Contract tests', () => {
 
         it('Deposit and Transfer platform fees', async () => {
             await setup();
-            await rawrToken.connect(playerAddress).approve(escrow.address, ethers.BigNumber.from(10000).mul(_1e18));
+            await rawrToken.connect(playerAddress).approve(escrow.address, ethers.BigNumber.from(15000).mul(_1e18));
             await escrow.connect(executionManagerAddress).deposit(rawrToken.address, 1, playerAddress.address, ethers.BigNumber.from(5000).mul(_1e18));
+            await escrow.connect(executionManagerAddress).deposit(rawrToken.address, 2, playerAddress.address, ethers.BigNumber.from(5000).mul(_1e18));
             
-            // deposit platform fee
-            await escrow.connect(executionManagerAddress)['transferPlatformFee(address,address,address,uint256)'](rawrToken.address, playerAddress.address, platformFeesPoolAddress.address, ethers.BigNumber.from(5000).mul(_1e18));
+            // deposit platform fee from user
+            await escrow.connect(executionManagerAddress)['transferPlatformFee(address,address,address,uint256)'](rawrToken.address, playerAddress.address, platformFeesPoolAddress.address, ethers.BigNumber.from(500).mul(_1e18));
 
             // check platform fees pool balance
-            expect(await rawrToken.balanceOf(platformFeesPoolAddress.address)).to.equal(ethers.BigNumber.from(5000).mul(_1e18));
+            expect(await rawrToken.balanceOf(platformFeesPoolAddress.address)).to.equal(ethers.BigNumber.from(500).mul(_1e18));
 
-            // transfer platform fee
-            await escrow.connect(executionManagerAddress)['transferPlatformFee(uint256[],address,uint256[],uint256)']([1], platformFeesPoolAddress.address, [ethers.BigNumber.from(1000).mul(_1e18)], ethers.BigNumber.from(1000).mul(_1e18));
+            // transfer platform fee from order Ids
+            await escrow.connect(executionManagerAddress).transferPlatformFees([1, 2], platformFeesPoolAddress.address, [ethers.BigNumber.from(1000).mul(_1e18), ethers.BigNumber.from(1000).mul(_1e18)], ethers.BigNumber.from(2000).mul(_1e18));
 
             // check platform fees pool balance
-            expect(await rawrToken.balanceOf(platformFeesPoolAddress.address)).to.equal(ethers.BigNumber.from(6000).mul(_1e18));
+            expect(await rawrToken.balanceOf(platformFeesPoolAddress.address)).to.equal(ethers.BigNumber.from(2500).mul(_1e18));
             
-            // check platform fees pool balance
-            expect(await rawrToken.balanceOf(escrow.address)).to.equal(ethers.BigNumber.from(4000).mul(_1e18));
+            // check escrow balance
+            expect(await rawrToken.balanceOf(escrow.address)).to.equal(ethers.BigNumber.from(8000).mul(_1e18));
 
-            // transfer platform fee
+            // transfer platform fee from single order Id
             await escrow.connect(executionManagerAddress)['transferPlatformFee(uint256,address,uint256)'](1, platformFeesPoolAddress.address, ethers.BigNumber.from(1000).mul(_1e18));
 
             // check platform fees pool balance
-            expect(await rawrToken.balanceOf(platformFeesPoolAddress.address)).to.equal(ethers.BigNumber.from(7000).mul(_1e18));
+            expect(await rawrToken.balanceOf(platformFeesPoolAddress.address)).to.equal(ethers.BigNumber.from(3500).mul(_1e18));
             
-            // check platform fees pool balance
-            expect(await rawrToken.balanceOf(escrow.address)).to.equal(ethers.BigNumber.from(3000).mul(_1e18));
+            // check escrow balance
+            expect(await rawrToken.balanceOf(escrow.address)).to.equal(ethers.BigNumber.from(7000).mul(_1e18));
         });
     });
 
@@ -338,7 +339,7 @@ describe('ERC20 Escrow Contract tests', () => {
             await rawrToken.connect(playerAddress).approve(escrow.address, ethers.BigNumber.from(5000).mul(_1e18));
             await escrow.connect(executionManagerAddress).deposit(rawrToken.address, 1, playerAddress.address, ethers.BigNumber.from(5000).mul(_1e18));
     
-            await escrow.connect(executionManagerAddress)['transferRoyalty(uint256[],address,uint256[])']([1], creatorAddress.address, [ethers.BigNumber.from(1000).mul(_1e18)]);
+            await escrow.connect(executionManagerAddress).transferRoyalties([1], creatorAddress.address, [ethers.BigNumber.from(1000).mul(_1e18)]);
 
             await escrow.connect(executionManagerAddress).withdraw(1, player2Address.address, ethers.BigNumber.from(4000).mul(_1e18));
     

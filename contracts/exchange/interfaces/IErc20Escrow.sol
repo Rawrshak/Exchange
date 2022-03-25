@@ -25,7 +25,7 @@ interface IErc20Escrow {
 
     function transferRoyalty(address _token, address _sender, address _owner, uint256 _amount) external;
 
-    function transferRoyalty(
+    function transferRoyalties(
         uint256[] calldata _orderIds,
         address _owner,
         uint256[] calldata _amounts
@@ -35,7 +35,7 @@ interface IErc20Escrow {
     
     function transferPlatformFee(address _token, address _sender, address _feesEscrow, uint256 _amount) external;
 
-    function transferPlatformFee(
+    function transferPlatformFees(
         uint256[] calldata _orderIds, 
         address _feesEscrow, 
         uint256[] calldata _platformFees, 

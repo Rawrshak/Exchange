@@ -256,7 +256,7 @@ describe('Exchange Contract', () => {
       await content.connect(player2Address).setApprovalForAll(await exchange.nftsEscrow(), true);
 
       expect(await exchange.connect(player2Address).fillOrder(orderId, 10, ethers.BigNumber.from(10000).mul(_1e18)))
-        .to.emit(exchange, 'OrdersFilled');
+        .to.emit(exchange, 'OrderFilled');
 
       // platform has 30 basis points and creator has 200 basis points from royalties so player2Address should only have
       // 10000 (initial) + 977 from the sale of their asset
@@ -289,7 +289,7 @@ describe('Exchange Contract', () => {
       await rawrToken.connect(player2Address).approve(await exchange.tokenEscrow(), ethers.BigNumber.from(10000).mul(_1e18));
 
       expect(await exchange.connect(player2Address).fillOrder(orderId, 10, ethers.BigNumber.from(10000).mul(_1e18)))
-        .to.emit(exchange, 'OrdersFilled');
+        .to.emit(exchange, 'OrderFilled');
 
       // Player 2 originally has 10, but after buying 1 more, he should have 11
       expect(await content.balanceOf(player2Address.address, 0)).to.equal(20);

@@ -43,20 +43,24 @@ contract Orderbook is IOrderbook, ManagerBase {
         // Note: Order.amountFilled is 0 by default
     }
 
+    function fillOrder(uint256 _orderId, uint256 orderAmount) public override onlyOwner {
+        // This will revert if amount is greater than the order amount. This will automatically revert
+        orders[_orderId].amountFilled += orderAmount;
+
+        if (orders[_orderId].amountFilled != orders[_orderId].amountOrdered) {
+            orders[_orderId].state = LibOrder.OrderState.PARTIALLY_FILLED;
+        } else {
+            orders[_orderId].state = LibOrder.OrderState.FILLED;
+        }
+    }
+
     function fillOrders(uint256[] memory _orderIds, uint256[] memory _amounts) external override onlyOwner {
         // The Exchange contract should have already checked the matching lengths of the parameters.
         // the caller will already fill in the orders up to the amount. 
         for (uint256 i = 0; i < _orderIds.length; ++i) {
             // skip zero amounts
             if (_amounts[i] > 0) {
-                // This will revert if amount is greater than the order amount. This will automatically revert
-                orders[_orderIds[i]].amountFilled += _amounts[i];
-
-                if (orders[_orderIds[i]].amountFilled != orders[_orderIds[i]].amountOrdered) {
-                    orders[_orderIds[i]].state = LibOrder.OrderState.PARTIALLY_FILLED;
-                } else {
-                    orders[_orderIds[i]].state = LibOrder.OrderState.FILLED;
-                }
+                fillOrder(_orderIds[i], _amounts[i]);
             }
         }
     }
@@ -78,6 +82,15 @@ contract Orderbook is IOrderbook, ManagerBase {
                 orders[_orderIds[i]].state = LibOrder.OrderState.CLAIMED;
             }
         }
+    }
+
+    function verifyOrderExists(
+        uint256 _orderId
+    ) external view override onlyOwner returns (bool) {
+        if (!exists(_orderId) ) {
+            return false;
+        }
+        return true;
     }
 
     function verifyOrdersExist(
@@ -128,6 +141,34 @@ contract Orderbook is IOrderbook, ManagerBase {
         return true;
     }
 
+    function getOrderAmount(
+        uint256 _orderId,
+        uint256 amountToFill,
+        uint256 maxSpend
+    ) external view override returns(uint256 orderAmount, uint256 volume) {
+        // Get Available Orders
+        if (orders[_orderId].state == LibOrder.OrderState.READY) {
+            // If state is ready, we set the order amount correctly
+            orderAmount = orders[_orderId].amountOrdered;
+        } else if (orders[_orderId].state == LibOrder.OrderState.PARTIALLY_FILLED) {
+            orderAmount = orders[_orderId].amountOrdered - orders[_orderId].amountFilled;
+        }
+
+        // get amounts ordered based on AmountToFill
+        if (amountToFill < orderAmount) {
+            orderAmount = amountToFill;
+        }
+        // calculate total order price
+        volume = orders[_orderId].price * orderAmount;
+
+        // adjust amounts ordered and volume based on maxSpend
+        if (maxSpend < volume) {
+            orderAmount = maxSpend / orders[_orderId].price;
+            volume = orders[_orderId].price * orderAmount;
+        }
+        require(orderAmount > 0, "Invalid order amount");
+    }
+
     function getOrderAmounts(
         uint256[] memory _orderIds,
         uint256 amountToFill,
@@ -151,7 +192,7 @@ contract Orderbook is IOrderbook, ManagerBase {
             if (orderAmounts[i] > 0) {
                 amountSpentOnOrder = orders[_orderIds[i]].price * orderAmounts[i];
                 
-                // Check if the transaction is still under tha Max Spend
+                // Check if the transaction is still under the Max Spend
                 if (maxSpend == 0) {
                     orderAmounts[i] = 0;
                     continue;

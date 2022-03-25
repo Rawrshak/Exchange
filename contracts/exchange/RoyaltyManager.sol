@@ -49,7 +49,7 @@ contract RoyaltyManager is IRoyaltyManager, ManagerBase {
         }
     }
 
-    function transferRoyalty(
+    function transferRoyalties(
         uint256[] calldata _orderIds,
         address _receiver,
         uint256[] calldata _royaltyFees
@@ -57,7 +57,7 @@ contract RoyaltyManager is IRoyaltyManager, ManagerBase {
         // No need to do checks. these values are returned from buyOrderRoyalties()
         // This is called in a batch fill buy order where Tokens are stored in the escrow and need to be "moved"
         // to the "claimable" table for the asset creator
-        _tokenEscrow().transferRoyalty(_orderIds, _receiver, _royaltyFees);
+        _tokenEscrow().transferRoyalties(_orderIds, _receiver, _royaltyFees);
     }
     
     function transferRoyalty(
@@ -87,7 +87,7 @@ contract RoyaltyManager is IRoyaltyManager, ManagerBase {
         }
     }
 
-    function transferPlatformFee(
+    function transferPlatformFees(
         address _token,
         uint256[] calldata _orderIds,
         uint256[] calldata _platformFees
@@ -100,7 +100,7 @@ contract RoyaltyManager is IRoyaltyManager, ManagerBase {
                 totalFee += _platformFees[i];
             }
             _exchangeFeesEscrow().depositFees(_token, totalFee);
-            _tokenEscrow().transferPlatformFee(_orderIds, address(_exchangeFeesEscrow()), _platformFees, totalFee);
+            _tokenEscrow().transferPlatformFees(_orderIds, address(_exchangeFeesEscrow()), _platformFees, totalFee);
         }
     }
     
