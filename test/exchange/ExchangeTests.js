@@ -132,7 +132,7 @@ describe('Exchange Contract', () => {
 
     it('Supports the Exchange Interface', async () => {
         // IExchange Interface
-        expect(await exchange.supportsInterface("0x0b4f74cf")).to.equal(true);
+        expect(await exchange.supportsInterface("0xebce35a0")).to.equal(true);
     });
   });
 
@@ -255,7 +255,7 @@ describe('Exchange Contract', () => {
       // player 2 fills the buy order by selling the asset and receiving payment minus royalties
       await content.connect(player2Address).setApprovalForAll(await exchange.nftsEscrow(), true);
 
-      expect(await exchange.connect(player2Address).fillOrder(orderId, 10, ethers.BigNumber.from(10000).mul(_1e18)))
+      expect(await exchange.connect(player2Address).fillOrder(orderId, 10))
         .to.emit(exchange, 'OrderFilled');
 
       // platform has 30 basis points and creator has 200 basis points from royalties so player2Address should only have
@@ -288,7 +288,7 @@ describe('Exchange Contract', () => {
       // player 2 fills the buy order by selling the asset and receiving payment minus royalties
       await rawrToken.connect(player2Address).approve(await exchange.tokenEscrow(), ethers.BigNumber.from(10000).mul(_1e18));
 
-      expect(await exchange.connect(player2Address).fillOrder(orderId, 10, ethers.BigNumber.from(10000).mul(_1e18)))
+      expect(await exchange.connect(player2Address).fillOrder(orderId, 10))
         .to.emit(exchange, 'OrderFilled');
 
       // Player 2 originally has 10, but after buying 1 more, he should have 11

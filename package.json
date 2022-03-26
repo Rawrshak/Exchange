@@ -34,6 +34,7 @@
     "ethers": "^5.4.7",
     "hardhat": "^2.6.6",
     "hardhat-contract-sizer": "^2.5.0",
+    "hardhat-gas-reporter": "^1.0.8",
     "typechain": "^5.2.0",
     "web3": "^1.5.3"
   },

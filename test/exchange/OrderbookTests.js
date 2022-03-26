@@ -61,7 +61,7 @@ describe('Orderbook Contract tests', () => {
 
     it('Supports the Orderbook Interface', async () => {
       // IOrderbook Interface
-      expect(await orderbook.supportsInterface("0xc54accc8")).to.equal(true);
+      expect(await orderbook.supportsInterface("0x5fa48343")).to.equal(true);
     });
   });
 
@@ -259,7 +259,7 @@ describe('Orderbook Contract tests', () => {
       expect(amounts[1]).is.equal(6);
 
       // single order Id transaction
-      var amount = await orderbook.getOrderAmount(id, 5, ethers.BigNumber.from(50000).mul(_1e18));
+      var amount = await orderbook.getOrderAmount(id, 5);
 
       // Expect orderAmount to equal 5 and volume to equal 50000
       expect(amount[0]).is.equal(5);
@@ -286,7 +286,7 @@ describe('Orderbook Contract tests', () => {
       expect(amounts[1]).is.equal(3);
 
       // single order Id transaction
-      var amount = await orderbook.getOrderAmount(id2, 3, ethers.BigNumber.from(25000).mul(_1e18));
+      var amount = await orderbook.getOrderAmount(id2, 3);
 
       // Expect orderAmount to equal 3 and volume to equal 15000
       expect(amount[0]).is.equal(3);
@@ -308,13 +308,6 @@ describe('Orderbook Contract tests', () => {
 
       // Expect amounts filled to equal 4
       expect(amounts[1]).is.equal(4);
-
-      // single order Id transaction
-      var amount = await orderbook.getOrderAmount(id3, 3, ethers.BigNumber.from(4000).mul(_1e18));
-
-      // Expect orderAmount to equal 2 and volume to equal 4000
-      expect(amount[0]).is.equal(2);
-      expect(amount[1]).is.equal(ethers.BigNumber.from(4000).mul(_1e18));
     });
 
     it('Get Order Amounts with non-exact MaxSpend', async () => {
@@ -332,13 +325,6 @@ describe('Orderbook Contract tests', () => {
 
       // Expect amounts filled to equal 2
       expect(amounts[1]).is.equal(2);
-
-      // single order Id transaction
-      var amount = await orderbook.getOrderAmount(id, 4, ethers.BigNumber.from(33333).mul(_1e18));
-
-      // Expect orderAmount to equal 4 and volume to equal 30000
-      expect(amount[0]).is.equal(3);
-      expect(amount[1]).is.equal(ethers.BigNumber.from(30000).mul(_1e18));
     });
 
     it('Invalid Order Amount', async () => {
@@ -354,12 +340,14 @@ describe('Orderbook Contract tests', () => {
       // change order state of orderId 2 to CANCELLED
       await orderbook.cancelOrders([id2]);
 
+      // change order state of orderId 3 to FILLED
+      await orderbook.fillOrder(id3, 3);
+
       // filled/cancelled orders should produce an order amount of 0 which reverts the transaction
-      await expect(orderbook.getOrderAmount(id2, 5, ethers.BigNumber.from(25000).mul(_1e18))).to.be.reverted;
-
-      await expect(orderbook.getOrderAmount(id, 0, ethers.BigNumber.from(50000).mul(_1e18))).to.be.reverted;
-
-      await expect(orderbook.getOrderAmount(id3, 3, ethers.BigNumber.from(1500).mul(_1e18))).to.be.reverted;
+      await expect(orderbook.getOrderAmount(id2, 5)).to.be.reverted;
+      await expect(orderbook.getOrderAmount(id3, 2)).to.be.reverted;
+      // amountToFill value of zero causes the transaction to revert
+      await expect(orderbook.getOrderAmount(id, 0)).to.be.reverted;
     });
 
     it('Get Payment totals', async () => {

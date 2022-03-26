@@ -67,14 +67,13 @@ contract Exchange is IExchange, ContextUpgradeable, OwnableUpgradeable, ERC165St
 
     function fillOrder(
         uint256 _orderId,
-        uint256 amountToFill,
-        uint256 maxSpend
+        uint256 amountToFill
     ) external override {
         // Verify order exists
         require(orderbook.verifyOrderExists(_orderId), "Non-existent order");
 
         // Get order amounts and total payment
-        (uint256 orderAmount, uint volume) = orderbook.getOrderAmount(_orderId, amountToFill, maxSpend);
+        (uint256 orderAmount, uint volume) = orderbook.getOrderAmount(_orderId, amountToFill);
         
         // get the order data
         LibOrder.Order memory order = orderbook.getOrder(_orderId);

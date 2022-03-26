@@ -20,8 +20,7 @@ interface IExchange {
     
     function fillOrder(
         uint256 _orderId,
-        uint256 amountToFill,
-        uint256 maxSpend
+        uint256 amountToFill
     ) external;
 
     function fillOrderBatch(

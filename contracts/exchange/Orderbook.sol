@@ -143,8 +143,7 @@ contract Orderbook is IOrderbook, ManagerBase {
 
     function getOrderAmount(
         uint256 _orderId,
-        uint256 amountToFill,
-        uint256 maxSpend
+        uint256 amountToFill
     ) external view override returns(uint256 orderAmount, uint256 volume) {
         // Get Available Orders
         if (orders[_orderId].state == LibOrder.OrderState.READY) {
@@ -161,11 +160,6 @@ contract Orderbook is IOrderbook, ManagerBase {
         // calculate total order price
         volume = orders[_orderId].price * orderAmount;
 
-        // adjust amounts ordered and volume based on maxSpend
-        if (maxSpend < volume) {
-            orderAmount = maxSpend / orders[_orderId].price;
-            volume = orders[_orderId].price * orderAmount;
-        }
         require(orderAmount > 0, "Invalid order amount");
     }
 
