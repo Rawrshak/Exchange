@@ -218,6 +218,8 @@ describe('Orderbook Contract tests', () => {
       id5 = await orderbook.ordersLength();
       await orderbook.placeOrder(orderData5);
 
+      expect(await orderbook.exists(id)).is.equal(true);
+      expect(await orderbook.exists(id3)).is.equal(true);
       expect(await orderbook.verifyOrdersExist([id, id3])).is.equal(true);
       expect(await orderbook.verifyOrdersExist([id2, id4, id5])).is.equal(true);
       expect(await orderbook.verifyAllOrdersData([id, id3])).is.equal(true);
@@ -232,6 +234,7 @@ describe('Orderbook Contract tests', () => {
       id3 = await orderbook.ordersLength();
       await orderbook.placeOrder(orderData3);
 
+      expect(await orderbook.exists(id4)).is.equal(false);
       expect(await orderbook.verifyOrdersExist([id, id3, id2])).is.equal(true);
       expect(await orderbook.verifyAllOrdersData([id, id3, id2])).is.equal(false);
     });
