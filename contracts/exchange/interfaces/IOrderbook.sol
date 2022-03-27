@@ -8,7 +8,7 @@ interface IOrderbook {
     function exists(uint256 _orderId) external view returns(bool);
     
     function ordersLength() external view returns(uint256);
-    
+
     function verifyOrdersExist(
         uint256[] memory _orderIds
     ) external view returns (bool);
@@ -37,6 +37,8 @@ interface IOrderbook {
 
     /******** Mutative Functions ********/
     function placeOrder(LibOrder.OrderInput memory _order) external returns(uint256 id);
+
+    function fillOrder(uint256 _orderId, uint256 orderAmount) external;
 
     function fillOrders(uint256[] memory _orderIds, uint256[] memory _amounts) external;
 

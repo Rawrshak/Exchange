@@ -4,6 +4,7 @@ require("@nomiclabs/hardhat-web3");
 require('@typechain/hardhat');
 require('@nomiclabs/hardhat-ethers');
 require('hardhat-contract-sizer');
+require("hardhat-gas-reporter");
 
 /**
  * @type import('hardhat/config').HardhatUserConfig
@@ -17,4 +18,7 @@ module.exports = {
     strict: true,
     only: [],
   },
+  gasReporter: {
+    enabled: (process.env.REPORT_GAS) ? true : false
+  }
 };

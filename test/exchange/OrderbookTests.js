@@ -61,7 +61,7 @@ describe('Orderbook Contract tests', () => {
 
     it('Supports the Orderbook Interface', async () => {
       // IOrderbook Interface
-      expect(await orderbook.supportsInterface("0x8af5cda4")).to.equal(true);
+      expect(await orderbook.supportsInterface("0x498831ff")).to.equal(true);
     });
   });
 
@@ -218,6 +218,8 @@ describe('Orderbook Contract tests', () => {
       id5 = await orderbook.ordersLength();
       await orderbook.placeOrder(orderData5);
 
+      expect(await orderbook.exists(id)).is.equal(true);
+      expect(await orderbook.exists(id3)).is.equal(true);
       expect(await orderbook.verifyOrdersExist([id, id3])).is.equal(true);
       expect(await orderbook.verifyOrdersExist([id2, id4, id5])).is.equal(true);
       expect(await orderbook.verifyAllOrdersData([id, id3])).is.equal(true);
@@ -232,6 +234,7 @@ describe('Orderbook Contract tests', () => {
       id3 = await orderbook.ordersLength();
       await orderbook.placeOrder(orderData3);
 
+      expect(await orderbook.exists(id4)).is.equal(false);
       expect(await orderbook.verifyOrdersExist([id, id3, id2])).is.equal(true);
       expect(await orderbook.verifyAllOrdersData([id, id3, id2])).is.equal(false);
     });
@@ -259,6 +262,9 @@ describe('Orderbook Contract tests', () => {
     it('Get Order Amounts with small AmountToFill', async () => {
       id = await orderbook.ordersLength();
       await orderbook.placeOrder(orderData1);
+
+      id2 = await orderbook.ordersLength();
+      await orderbook.placeOrder(orderData2);
   
       id3 = await orderbook.ordersLength();
       await orderbook.placeOrder(orderData3);
@@ -307,6 +313,23 @@ describe('Orderbook Contract tests', () => {
       expect(amounts[1]).is.equal(2);
     });
 
+    it('Invalid Order Amount', async () => {
+      id = await orderbook.ordersLength();
+      await orderbook.placeOrder(orderData1);
+
+      id2 = await orderbook.ordersLength();
+      await orderbook.placeOrder(orderData2);
+  
+      id3 = await orderbook.ordersLength();
+      await orderbook.placeOrder(orderData3);
+
+      // change order state of orderId 2 to CANCELLED
+      await orderbook.cancelOrders([id2]);
+
+      // change order state of orderId 3 to FILLED
+      await orderbook.fillOrder(id3, 3);
+    });
+
     it('Get Payment totals', async () => {
       id = await orderbook.ordersLength();
       await orderbook.placeOrder(orderData1);
@@ -325,7 +348,25 @@ describe('Orderbook Contract tests', () => {
       expect(paymentTotals[1][1]).is.equal(ethers.BigNumber.from(6000).mul(_1e18));
     });
 
-    it('Fill Orders', async () => {
+    it('Fill Single Orders', async () => {
+      id = await orderbook.ordersLength();
+      await orderbook.placeOrder(orderData1);
+      id3 = await orderbook.ordersLength();
+      await orderbook.placeOrder(orderData3);
+
+      await orderbook.fillOrder(id, 4);
+      await orderbook.fillOrder(id3, 3);
+
+      storedOrder = await orderbook.getOrder(id);
+      expect(storedOrder.amountFilled).is.equal(4);
+      expect(storedOrder.state).is.equal(1); // State.PARTIALLY_FILLED
+
+      storedOrder = await orderbook.getOrder(id3);
+      expect(storedOrder.amountFilled).is.equal(3);
+      expect(storedOrder.state).is.equal(2); // State.FILLED
+    });
+
+    it('Fill Multiple Orders', async () => {
       id = await orderbook.ordersLength();
       await orderbook.placeOrder(orderData1);
       id3 = await orderbook.ordersLength();

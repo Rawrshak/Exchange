@@ -18,6 +18,11 @@ interface IExchange {
     /******** Mutative Functions ********/
     function placeOrder(LibOrder.OrderInput memory _order) external; 
     
+    function fillOrder(
+        uint256 _orderId,
+        uint256 amountToFill
+    ) external;
+
     function fillOrderBatch(
         uint256[] memory _orderIds,
         uint256 amountToFill,
@@ -42,6 +47,14 @@ interface IExchange {
         LibOrder.AssetData asset,
         address token,
         uint256 totalAssetsAmount,
+        uint256 volume);
+
+    event OrderFilled(
+        address indexed from,
+        uint256 orderId,
+        uint256 amount,
+        LibOrder.AssetData asset,
+        address token,
         uint256 volume);
 
     event OrdersDeleted(address indexed owner, uint256[] orderIds);

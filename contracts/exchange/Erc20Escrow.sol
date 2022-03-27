@@ -130,38 +130,47 @@ contract Erc20Escrow is IErc20Escrow, EscrowBase {
         }
         IERC20Upgradeable(_token).transferFrom(_sender, address(this), _amount);
     }
-    
-    // Transfer Creator Royalty from escrowed buy order to escrow
-    function transferRoyalty(
+
+    // Transfer Creator Royalty from escrowed buy order (multiple ids) to escrow
+    function transferRoyalties(
         uint256[] calldata _orderIds,
         address _owner,
         uint256[] calldata _amounts
     ) external override onlyRole(MANAGER_ROLE) {        
         for (uint256 i = 0; i < _orderIds.length; i++) {
             if (_amounts[i] > 0) {
-                require(escrowedByOrder[_orderIds[i]].amount >= _amounts[i], "Invalid royalty amount");
-
-                // No need to do checks. The exchange contracts will do the checks.
-                address token = escrowedByOrder[_orderIds[i]].token;
-                escrowedByOrder[_orderIds[i]].amount = escrowedByOrder[_orderIds[i]].amount - _amounts[i];
-
-                if (!claimableByOwner[_owner].contains(token)) {
-                    claimableByOwner[_owner].set(token, _amounts[i]);
-                } else {
-                    claimableByOwner[_owner].set(token, claimableByOwner[_owner].get(token) + _amounts[i]);
-                }
+                transferRoyalty(_orderIds[i], _owner, _amounts[i]);
             }
         }
     }
 
-    // Deposit Platform Fees
+    // Transfer Creator Royalty from escrowed buy order (single id) to escrow
+    function transferRoyalty(
+        uint256 _orderId,
+        address _owner,
+        uint256 _amount
+    ) public override onlyRole(MANAGER_ROLE) {        
+        require(escrowedByOrder[_orderId].amount >= _amount, "Invalid royalty amount");
+
+        // No need to do checks. The exchange contracts will do the checks.
+        address token = escrowedByOrder[_orderId].token;
+        escrowedByOrder[_orderId].amount = escrowedByOrder[_orderId].amount - _amount;
+
+        if (!claimableByOwner[_owner].contains(token)) {
+            claimableByOwner[_owner].set(token, _amount);
+        } else {
+            claimableByOwner[_owner].set(token, claimableByOwner[_owner].get(token) + _amount);
+        }
+    }
+
+    // Deposit platform fees from buyer to escrow
     function transferPlatformFee(address _token, address _sender, address _feesEscrow, uint256 _amount) external override onlyRole(MANAGER_ROLE) {
         // No need to do checks. The exchange contracts will do the checks.
         IERC20Upgradeable(_token).transferFrom(_sender, _feesEscrow, _amount);
     }
 
-    // Transfer Platform fees from escrowed by order to escrow
-    function transferPlatformFee(
+    // Transfer Platform fees from escrowed by order (multiple ids) to escrow
+    function transferPlatformFees(
         uint256[] calldata _orderIds, 
         address _feesEscrow, 
         uint256[] calldata _platformFees, 
@@ -172,6 +181,13 @@ contract Erc20Escrow is IErc20Escrow, EscrowBase {
             escrowedByOrder[_orderIds[i]].amount -= _platformFees[i];
         }
         IERC20Upgradeable(escrowedByOrder[_orderIds[0]].token).transfer(_feesEscrow, _totalFee);
+    }
+
+    // Transfer Platform fees from escrowed by order (single id) to escrow
+    function transferPlatformFee(uint256 _orderId, address _feesEscrow, uint256 _amount) external override onlyRole(MANAGER_ROLE) {
+        // No need to do checks. The exchange contracts will do the checks.
+        escrowedByOrder[_orderId].amount = escrowedByOrder[_orderId].amount - _amount;
+        IERC20Upgradeable(escrowedByOrder[_orderId].token).transfer(_feesEscrow, _amount);
     }
 
     function claimRoyalties(address _owner) external override onlyRole(MANAGER_ROLE) {

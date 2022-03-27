@@ -65,6 +65,52 @@ contract Exchange is IExchange, ContextUpgradeable, OwnableUpgradeable, ERC165St
         emit OrderPlaced(_msgSender(), id, _order);
     }
 
+    function fillOrder(
+        uint256 _orderId,
+        uint256 amountToFill
+    ) external override {
+        // Verify order exists
+        require(orderbook.exists(_orderId), "Non-existent order");
+        
+        // get the order data
+        LibOrder.Order memory order = orderbook.getOrder(_orderId);
+
+        // Get order amounts and payment
+        uint256 orderAmount = (order.amountOrdered - order.amountFilled);
+        if (amountToFill < orderAmount) {
+            orderAmount = amountToFill;
+        }
+        require(orderAmount > 0, "Invalid order amount");
+
+        uint256 volume = (order.price * orderAmount);
+
+        // Orderbook -> fill order
+        orderbook.fillOrder(_orderId, orderAmount);
+
+        // Calculate and deduct royalties
+        (address receiver,
+        uint256 royaltyFee,
+        uint256 remaining) = royaltyManager.payableRoyalties(order.asset, volume);
+
+        if (order.isBuyOrder) {
+            // update the royalty table and pay platform fees
+            royaltyManager.transferRoyalty(_orderId, receiver, royaltyFee);
+            royaltyManager.transferPlatformFee(order.token, _orderId, volume);
+
+            // Update Escrow records for the orders - will revert if the user doesn't have enough assets
+            executionManager.executeBuyOrder(_msgSender(), _orderId, remaining, orderAmount, order.asset);
+        } else {
+            // update the royalty table and pay creator royalties and platform fees
+            royaltyManager.transferRoyalty(_msgSender(), order.token, receiver, royaltyFee);
+            royaltyManager.transferPlatformFee(_msgSender(), order.token, volume);
+
+            // Execute trade - will revert if buyer doesn't have enough funds
+            executionManager.executeSellOrder(_msgSender(), _orderId, remaining, orderAmount, order.token);
+        }
+
+        emit OrderFilled(_msgSender(), _orderId, orderAmount, order.asset, order.token, volume);
+    }
+
     function fillOrderBatch(
         uint256[] memory _orderIds,
         uint256 amountToFill,
@@ -98,11 +144,11 @@ contract Exchange is IExchange, ContextUpgradeable, OwnableUpgradeable, ERC165St
             uint256[] memory remaining) = royaltyManager.buyOrderRoyalties(order.asset, amountPerOrder);
 
             // update the royalty table from each orderId and pay platform fees
-            royaltyManager.transferRoyalty(_orderIds, receiver, royaltyFees);
-            royaltyManager.transferPlatformFee(order.token, _orderIds, platformFees);
+            royaltyManager.transferRoyalties(_orderIds, receiver, royaltyFees);
+            royaltyManager.transferPlatformFees(order.token, _orderIds, platformFees);
 
             // Update Escrow records for the orders - will revert if the user doesn't have enough assets
-            executionManager.executeBuyOrder(_msgSender(), _orderIds, remaining, orderAmounts, order.asset);
+            executionManager.executeBuyOrderBatch(_msgSender(), _orderIds, remaining, orderAmounts, order.asset);
         } else {
             // Calculate and deduct royalties
             (address receiver,
@@ -114,7 +160,7 @@ contract Exchange is IExchange, ContextUpgradeable, OwnableUpgradeable, ERC165St
             royaltyManager.transferPlatformFee(_msgSender(), order.token, volume);
 
             // Execute trade - will revert if buyer doesn't have enough funds
-            executionManager.executeSellOrder(_msgSender(), _orderIds, remaining, orderAmounts, order.token);
+            executionManager.executeSellOrderBatch(_msgSender(), _orderIds, remaining, orderAmounts, order.token);
         }
 
         emit OrdersFilled(_msgSender(), _orderIds, orderAmounts, order.asset, order.token, assetsFilled, volume);

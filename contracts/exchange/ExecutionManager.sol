@@ -38,6 +38,21 @@ contract ExecutionManager is IExecutionManager, ManagerBase {
 
     function executeBuyOrder(
         address _user,
+        uint256 _orderId,
+        uint256 _paymentForOrder,
+        uint256 _amount,
+        LibOrder.AssetData calldata _asset) 
+        external override onlyOwner
+    {  
+        // Send Assets to escrow
+        _nftEscrow().deposit(_orderId, _user, _amount, _asset);
+
+        // send payment from escrow to user
+        _tokenEscrow().withdraw(_orderId, _user, _paymentForOrder);
+    }
+    
+    function executeBuyOrderBatch(
+        address _user,
         uint256[] calldata _orderIds,
         uint256[] calldata _paymentPerOrder,
         uint256[] calldata _amounts,
@@ -51,8 +66,22 @@ contract ExecutionManager is IExecutionManager, ManagerBase {
         _tokenEscrow().withdrawBatch(_orderIds, _user, _paymentPerOrder);
     }
 
-    // Send assets from escrow to user, send tokens from user to escrow
     function executeSellOrder(
+        address _user,
+        uint256 _orderId,
+        uint256 _paymentForOrder,
+        uint256 _amount,
+        address _token)
+        external override onlyOwner
+    {
+        // send payment from user to escrow
+        _tokenEscrow().deposit(_token, _orderId, _user, _paymentForOrder);
+        // send asset to buyer
+        _nftEscrow().withdraw(_orderId, _user, _amount);
+    }
+
+    // Send assets from escrow to user, send tokens from user to escrow
+    function executeSellOrderBatch(
         address _user,
         uint256[] calldata _orderIds,
         uint256[] calldata _paymentPerOrder,

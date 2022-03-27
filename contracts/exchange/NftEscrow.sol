@@ -58,7 +58,7 @@ contract NftEscrow is INftEscrow, EscrowBase, ERC1155HolderUpgradeable, ERC721Ho
         LibOrder.AssetData memory _assetData
     ) external override onlyRole(MANAGER_ROLE) {
         uint256 total;
-        for (uint256 i =0; i < _orderIds.length; i++) {
+        for (uint256 i = 0; i < _orderIds.length; i++) {
             if (_amounts[i] > 0) {
                 // Update mappings for each order
                 escrowedAsset[_orderIds[i]] = _assetData;
