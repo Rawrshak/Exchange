@@ -84,15 +84,6 @@ contract Orderbook is IOrderbook, ManagerBase {
         }
     }
 
-    function verifyOrderExists(
-        uint256 _orderId
-    ) external view override onlyOwner returns (bool) {
-        if (!exists(_orderId) ) {
-            return false;
-        }
-        return true;
-    }
-
     function verifyOrdersExist(
         uint256[] memory _orderIds
     ) external view override onlyOwner returns (bool) {
@@ -139,28 +130,6 @@ contract Orderbook is IOrderbook, ManagerBase {
             }
         }
         return true;
-    }
-
-    function getOrderAmount(
-        uint256 _orderId,
-        uint256 amountToFill
-    ) external view override returns(uint256 orderAmount, uint256 volume) {
-        // Get Available Orders
-        if (orders[_orderId].state == LibOrder.OrderState.READY) {
-            // If state is ready, we set the order amount correctly
-            orderAmount = orders[_orderId].amountOrdered;
-        } else if (orders[_orderId].state == LibOrder.OrderState.PARTIALLY_FILLED) {
-            orderAmount = orders[_orderId].amountOrdered - orders[_orderId].amountFilled;
-        }
-
-        // get amounts ordered based on AmountToFill
-        if (amountToFill < orderAmount) {
-            orderAmount = amountToFill;
-        }
-        // calculate total order price
-        volume = orders[_orderId].price * orderAmount;
-
-        require(orderAmount > 0, "Invalid order amount");
     }
 
     function getOrderAmounts(

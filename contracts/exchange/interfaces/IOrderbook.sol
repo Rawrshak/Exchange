@@ -8,8 +8,6 @@ interface IOrderbook {
     function exists(uint256 _orderId) external view returns(bool);
     
     function ordersLength() external view returns(uint256);
-    
-    function verifyOrderExists(uint256 _orderId) external view returns (bool);
 
     function verifyOrdersExist(
         uint256[] memory _orderIds
@@ -23,11 +21,6 @@ interface IOrderbook {
     ) external view returns (bool);
 
     function verifyOrdersReady(uint256[] memory _orderIds) external view returns (bool);
-
-    function getOrderAmount(
-        uint256 _orderId,
-        uint256 amountToFill
-    ) external view returns(uint256 orderAmount, uint256 volume);
 
     function getOrderAmounts(
         uint256[] memory _orderIds,
