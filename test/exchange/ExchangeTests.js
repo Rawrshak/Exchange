@@ -631,7 +631,7 @@ describe('Exchange Contract', () => {
       expect(await exchange.connect(player2Address).cancelOrders([orderId2]))
         .to.emit(exchange, 'OrdersDeleted');
 
-      // player 1 cannot cancel a cancelled order
+      // player 2 cannot cancel a cancelled order
       await expect(exchange.connect(player2Address).cancelOrders([orderId2])).to.be.reverted;
     });
   });

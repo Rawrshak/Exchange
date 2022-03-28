@@ -94,9 +94,6 @@ contract Erc20Escrow is IErc20Escrow, EscrowBase {
 
         escrowedByOrder[_orderId].amount = escrowedByOrder[_orderId].amount - _amount;
         IERC20Upgradeable(escrowedByOrder[_orderId].token).transfer(_receiver, _amount);
-        if (escrowedByOrder[_orderId].amount == 0) {
-            delete escrowedByOrder[_orderId].token;
-        }
     }
 
     function withdrawBatch(
