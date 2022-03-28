@@ -16,7 +16,7 @@ interface IExecutionManager {
     
     function placeBuyOrder(uint256 _orderId, address _token, address _sender, uint256 _tokenAmount) external;
 
-    function placeSellOrder(uint256 _orderId, address _sender, LibOrder.AssetData memory _asset, uint256 _assetAmount) external;
+    function placeSellOrder(uint256 _orderId, address _sender, LibOrder.AssetData calldata _asset, uint256 _assetAmount) external;
 
     function executeBuyOrder(
         address _user,

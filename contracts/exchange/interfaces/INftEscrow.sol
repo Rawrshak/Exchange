@@ -15,14 +15,14 @@ interface INftEscrow {
         uint256 _orderId,
         address _sender,
         uint256 _amount,
-        LibOrder.AssetData memory _assetData
+        LibOrder.AssetData calldata _assetData
     ) external;
 
     function depositBatch(
         uint256[] calldata _orderIds,
         address _sender,
         uint256[] calldata _amounts,
-        LibOrder.AssetData memory _assetData
+        LibOrder.AssetData calldata _assetData
     ) external;
 
     function withdraw(uint256 orderId, address _receiver, uint256 amount) external;

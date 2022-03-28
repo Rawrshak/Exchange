@@ -14,12 +14,12 @@ interface IRoyaltyManager {
     ) external view returns(address receiver, uint256 royaltyFee, uint256 remaining);
     
     function buyOrderRoyalties(
-        LibOrder.AssetData memory _asset,
+        LibOrder.AssetData calldata _asset,
         uint256[] calldata amountPerOrder
     ) external view returns(address receiver, uint256[] memory royaltyFees, uint256[] memory platformFees, uint256[] memory remaining);
 
     function sellOrderRoyalties(
-        LibOrder.AssetData memory _asset,
+        LibOrder.AssetData calldata _asset,
         uint256[] calldata amountPerOrder
     ) external view returns(address receiver, uint256 royaltyTotal, uint256[] memory remaining);
 

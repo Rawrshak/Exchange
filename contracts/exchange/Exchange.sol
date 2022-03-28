@@ -40,7 +40,7 @@ contract Exchange is IExchange, ContextUpgradeable, OwnableUpgradeable, ERC165St
     }
 
     // exchange functions
-    function placeOrder(LibOrder.OrderInput memory _order) external override {        
+    function placeOrder(LibOrder.OrderInput calldata _order) external override {        
         LibOrder.verifyOrderInput(_order, _msgSender());
         require(executionManager.verifyToken(_order.token), "Token is not supported.");
 

@@ -16,7 +16,7 @@ interface IExchange {
     function claimableRoyalties() external view returns (address[] memory tokens, uint256[] memory amounts);
     
     /******** Mutative Functions ********/
-    function placeOrder(LibOrder.OrderInput memory _order) external; 
+    function placeOrder(LibOrder.OrderInput calldata _order) external; 
     
     function fillOrder(
         uint256 _orderId,

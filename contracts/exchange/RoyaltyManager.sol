@@ -139,7 +139,7 @@ contract RoyaltyManager is IRoyaltyManager, ManagerBase {
     }
 
     function buyOrderRoyalties(
-        LibOrder.AssetData memory _asset,
+        LibOrder.AssetData calldata _asset,
         uint256[] calldata amountPerOrder
     ) external view override onlyOwner returns(address receiver, uint256[] memory royaltyFees, uint256[] memory platformFees, uint256[] memory remaining) {
         remaining = new uint256[](amountPerOrder.length);
@@ -166,7 +166,7 @@ contract RoyaltyManager is IRoyaltyManager, ManagerBase {
     }
 
     function sellOrderRoyalties(
-        LibOrder.AssetData memory _asset,
+        LibOrder.AssetData calldata _asset,
         uint256[] calldata amountPerOrder
     ) external view override onlyOwner returns(address receiver, uint256 royaltyTotal, uint256[] memory remaining) {
         remaining = new uint256[](amountPerOrder.length);

@@ -30,7 +30,7 @@ contract Orderbook is IOrderbook, ManagerBase {
     }
 
     /**************** External Functions ****************/
-    function placeOrder(LibOrder.OrderInput memory _order) external override onlyOwner returns(uint256 id){
+    function placeOrder(LibOrder.OrderInput calldata _order) external override onlyOwner returns(uint256 id){
         id = ordersLength++;
         orders[id].asset = _order.asset;
         orders[id].owner = _order.owner;
@@ -54,7 +54,7 @@ contract Orderbook is IOrderbook, ManagerBase {
         }
     }
 
-    function fillOrders(uint256[] memory _orderIds, uint256[] memory _amounts) external override onlyOwner {
+    function fillOrders(uint256[] calldata _orderIds, uint256[] calldata _amounts) external override onlyOwner {
         // The Exchange contract should have already checked the matching lengths of the parameters.
         // the caller will already fill in the orders up to the amount. 
         for (uint256 i = 0; i < _orderIds.length; ++i) {
