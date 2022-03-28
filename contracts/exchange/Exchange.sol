@@ -40,7 +40,7 @@ contract Exchange is IExchange, ContextUpgradeable, OwnableUpgradeable, ERC165St
     }
 
     // exchange functions
-    function placeOrder(LibOrder.OrderInput memory _order) external override {        
+    function placeOrder(LibOrder.OrderInput calldata _order) external override {        
         LibOrder.verifyOrderInput(_order, _msgSender());
         require(executionManager.verifyToken(_order.token), "Token is not supported.");
 
@@ -112,7 +112,7 @@ contract Exchange is IExchange, ContextUpgradeable, OwnableUpgradeable, ERC165St
     }
 
     function fillOrderBatch(
-        uint256[] memory _orderIds,
+        uint256[] calldata _orderIds,
         uint256 amountToFill,
         uint256 maxSpend
     ) external override {
@@ -121,8 +121,10 @@ contract Exchange is IExchange, ContextUpgradeable, OwnableUpgradeable, ERC165St
         // Verify orders exist
         require(orderbook.verifyOrdersExist(_orderIds), "Non-existent order");
 
-        // Verify all orders are of the same asset and the same token payment
-        require(orderbook.verifyAllOrdersData(_orderIds), "Invalid order data");
+        if (_orderIds.length > 1) {
+            // Verify all orders are of the same asset and the same token payment
+            require(orderbook.verifyAllOrdersData(_orderIds), "Invalid order data");
+        }
 
         // Get order amounts that are still available
         (uint256[] memory orderAmounts, uint256 assetsFilled) = orderbook.getOrderAmounts(_orderIds, amountToFill, maxSpend);
@@ -166,7 +168,7 @@ contract Exchange is IExchange, ContextUpgradeable, OwnableUpgradeable, ERC165St
         emit OrdersFilled(_msgSender(), _orderIds, orderAmounts, order.asset, order.token, assetsFilled, volume);
     }
 
-    function cancelOrders(uint256[] memory _orderIds) external override {
+    function cancelOrders(uint256[] calldata _orderIds) external override {
         require(_orderIds.length > 0, "empty order length.");
         
         require(orderbook.verifyOrdersExist(_orderIds), "Order does not exist");
@@ -181,7 +183,7 @@ contract Exchange is IExchange, ContextUpgradeable, OwnableUpgradeable, ERC165St
         emit OrdersDeleted(_msgSender(), _orderIds);
     }
 
-    function claimOrders(uint256[] memory _orderIds) external override {
+    function claimOrders(uint256[] calldata _orderIds) external override {
         require(_orderIds.length > 0, "empty order length.");
         
         require(orderbook.verifyOrdersExist(_orderIds), "Order does not exist");

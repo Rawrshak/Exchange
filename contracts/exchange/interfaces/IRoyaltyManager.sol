@@ -15,12 +15,12 @@ interface IRoyaltyManager {
     
     function buyOrderRoyalties(
         LibOrder.AssetData calldata _asset,
-        uint256[] memory amountPerOrder
+        uint256[] calldata amountPerOrder
     ) external view returns(address receiver, uint256[] memory royaltyFees, uint256[] memory platformFees, uint256[] memory remaining);
 
     function sellOrderRoyalties(
         LibOrder.AssetData calldata _asset,
-        uint256[] memory amountPerOrder
+        uint256[] calldata amountPerOrder
     ) external view returns(address receiver, uint256 royaltyTotal, uint256[] memory remaining);
 
     /******** Mutative Functions ********/
@@ -47,7 +47,7 @@ interface IRoyaltyManager {
 
     function transferPlatformFee(address _sender, address _token, uint256 _total) external;
 
-    function transferPlatformFees(address _token, uint256[] calldata _orderIds, uint256[] memory platformFees) external;
+    function transferPlatformFees(address _token, uint256[] calldata _orderIds, uint256[] calldata platformFees) external;
 
     function transferPlatformFee(address _token, uint256 _orderId, uint256 _total) external;
 }

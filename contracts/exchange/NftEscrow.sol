@@ -42,7 +42,7 @@ contract NftEscrow is INftEscrow, EscrowBase, ERC1155HolderUpgradeable, ERC721Ho
         uint256 _orderId,
         address _sender,
         uint256 _amount,
-        LibOrder.AssetData memory _assetData
+        LibOrder.AssetData calldata _assetData
     ) external override onlyRole(MANAGER_ROLE) {
         // No need to do checks. The exchange contracts will do the checks.
         escrowedAsset[_orderId] = _assetData;
@@ -55,7 +55,7 @@ contract NftEscrow is INftEscrow, EscrowBase, ERC1155HolderUpgradeable, ERC721Ho
         uint256[] calldata _orderIds,
         address _sender,
         uint256[] calldata _amounts,
-        LibOrder.AssetData memory _assetData
+        LibOrder.AssetData calldata _assetData
     ) external override onlyRole(MANAGER_ROLE) {
         uint256 total;
         for (uint256 i = 0; i < _orderIds.length; i++) {
@@ -85,7 +85,6 @@ contract NftEscrow is INftEscrow, EscrowBase, ERC1155HolderUpgradeable, ERC721Ho
         // We don't need to store how much was escrowed because we keep track of the order data in 
         // the orderbook.
         if (escrowedAmounts[_orderId] == 0) {
-            delete escrowedAmounts[_orderId];
             delete escrowedAsset[_orderId];
         }
     }
@@ -113,7 +112,6 @@ contract NftEscrow is INftEscrow, EscrowBase, ERC1155HolderUpgradeable, ERC721Ho
                 // We don't need to store how much was escrowed because we keep track of the order data in 
                 // the orderbook.
                 if (escrowedAmounts[_orderIds[i]] == 0) {
-                    delete escrowedAmounts[_orderIds[i]];
                     delete escrowedAsset[_orderIds[i]];
                 }
             }

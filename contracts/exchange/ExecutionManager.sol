@@ -32,7 +32,7 @@ contract ExecutionManager is IExecutionManager, ManagerBase {
         _tokenEscrow().deposit(_token, _orderId, _sender, _tokenAmount);
     }
 
-    function placeSellOrder(uint256 _orderId, address _sender, LibOrder.AssetData memory _asset, uint256 _assetAmount) external override onlyOwner {
+    function placeSellOrder(uint256 _orderId, address _sender, LibOrder.AssetData calldata _asset, uint256 _assetAmount) external override onlyOwner {
         _nftEscrow().deposit(_orderId, _sender, _assetAmount, _asset);
     }
 
@@ -96,7 +96,7 @@ contract ExecutionManager is IExecutionManager, ManagerBase {
         _nftEscrow().withdrawBatch(_orderIds, _user, _amounts);
     }
 
-    function cancelOrders(uint256[] memory _orderIds) external override onlyOwner {
+    function cancelOrders(uint256[] calldata _orderIds) external override onlyOwner {
         for (uint256 i = 0; i < _orderIds.length; ++i) {
             LibOrder.Order memory order = _orderbook().getOrder(_orderIds[i]);
             if (order.isBuyOrder) {

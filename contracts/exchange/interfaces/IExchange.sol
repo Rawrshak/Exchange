@@ -16,7 +16,7 @@ interface IExchange {
     function claimableRoyalties() external view returns (address[] memory tokens, uint256[] memory amounts);
     
     /******** Mutative Functions ********/
-    function placeOrder(LibOrder.OrderInput memory _order) external; 
+    function placeOrder(LibOrder.OrderInput calldata _order) external; 
     
     function fillOrder(
         uint256 _orderId,
@@ -24,14 +24,14 @@ interface IExchange {
     ) external;
 
     function fillOrderBatch(
-        uint256[] memory _orderIds,
+        uint256[] calldata _orderIds,
         uint256 amountToFill,
         uint256 maxSpend
     ) external;
 
-    function cancelOrders(uint256[] memory _orderIds) external;
+    function cancelOrders(uint256[] calldata _orderIds) external;
 
-    function claimOrders(uint256[] memory _orderIds) external;
+    function claimOrders(uint256[] calldata _orderIds) external;
 
     function claimRoyalties() external;
 
