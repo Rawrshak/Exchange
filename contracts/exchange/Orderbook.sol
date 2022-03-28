@@ -65,16 +65,14 @@ contract Orderbook is IOrderbook, ManagerBase {
         }
     }
 
-    function cancelOrders(uint256[] memory _orderIds) external override onlyOwner {
+    function cancelOrders(uint256[] calldata _orderIds) external override onlyOwner {
         for (uint256 i = 0; i < _orderIds.length; ++i) {
-            require(orders[_orderIds[i]].state == LibOrder.OrderState.READY || 
-                orders[_orderIds[i]].state == LibOrder.OrderState.PARTIALLY_FILLED, "Invalid order state.");
-
+            // Note: verifyOrdersReady() already checks that the order state is either READY or PARTIALLY_FILLED
             orders[_orderIds[i]].state = LibOrder.OrderState.CANCELLED;
         }
     }
     
-    function claimOrders(uint256[] memory _orderIds) external override onlyOwner {
+    function claimOrders(uint256[] calldata _orderIds) external override onlyOwner {
         for (uint256 i = 0; i < _orderIds.length; ++i) {
             // If the state is Partially Filled, we don't set the order state as claimed. Claimed state 
             // only occurs for when the order is completely filled and the order owner claims.
@@ -85,7 +83,7 @@ contract Orderbook is IOrderbook, ManagerBase {
     }
 
     function verifyOrdersExist(
-        uint256[] memory _orderIds
+        uint256[] calldata _orderIds
     ) external view override onlyOwner returns (bool) {
         for (uint256 i = 0; i < _orderIds.length; ++i) {
             if (!exists(_orderIds[i]) ) {
@@ -96,10 +94,10 @@ contract Orderbook is IOrderbook, ManagerBase {
     }
 
     function verifyAllOrdersData(
-        uint256[] memory _orderIds
+        uint256[] calldata _orderIds
     ) external view override onlyOwner returns (bool) {
         LibOrder.Order memory firstOrder = orders[_orderIds[0]];
-        for (uint256 i = 0; i < _orderIds.length; ++i) {
+        for (uint256 i = 1; i < _orderIds.length; ++i) {
             if (orders[_orderIds[i]].asset.contentAddress != firstOrder.asset.contentAddress || 
                 orders[_orderIds[i]].asset.tokenId != firstOrder.asset.tokenId ||
                 orders[_orderIds[i]].token != firstOrder.token ||
@@ -111,7 +109,7 @@ contract Orderbook is IOrderbook, ManagerBase {
     }
 
     function verifyOrderOwners(
-        uint256[] memory _orderIds,
+        uint256[] calldata _orderIds,
         address _owner
     ) external view override onlyOwner returns (bool) {
         for (uint256 i = 0; i < _orderIds.length; ++i) {
@@ -133,7 +131,7 @@ contract Orderbook is IOrderbook, ManagerBase {
     }
 
     function getOrderAmounts(
-        uint256[] memory _orderIds,
+        uint256[] calldata _orderIds,
         uint256 amountToFill,
         uint256 maxSpend
     ) external view override returns(uint256[] memory orderAmounts, uint256 amountFilled) {
@@ -156,11 +154,11 @@ contract Orderbook is IOrderbook, ManagerBase {
                 amountSpentOnOrder = orders[_orderIds[i]].price * orderAmounts[i];
                 
                 // Check if the transaction is still under the Max Spend
-                if (maxSpend == 0) {
+                if (maxSpend >= amountSpentOnOrder) {
+                    maxSpend -= amountSpentOnOrder;
+                } else if (maxSpend == 0) {
                     orderAmounts[i] = 0;
                     continue;
-                } else if (maxSpend >= amountSpentOnOrder) {
-                    maxSpend -= amountSpentOnOrder;
                 } else if (maxSpend < amountSpentOnOrder) {
                     orderAmounts[i] = maxSpend / orders[_orderIds[i]].price;
                     maxSpend = 0;

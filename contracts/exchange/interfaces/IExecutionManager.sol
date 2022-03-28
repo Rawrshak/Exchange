@@ -50,7 +50,7 @@ interface IExecutionManager {
         address _token)
         external;
 
-    function cancelOrders(uint256[] memory _orderIds) external;
+    function cancelOrders(uint256[] calldata _orderIds) external;
 
     function claimOrders(address _user, uint256[] calldata _orderIds) external;
     

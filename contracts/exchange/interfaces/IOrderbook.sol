@@ -10,20 +10,20 @@ interface IOrderbook {
     function ordersLength() external view returns(uint256);
 
     function verifyOrdersExist(
-        uint256[] memory _orderIds
+        uint256[] calldata _orderIds
     ) external view returns (bool);
 
-    function verifyAllOrdersData(uint256[] memory _orderIds) external view returns (bool);
+    function verifyAllOrdersData(uint256[] calldata _orderIds) external view returns (bool);
 
     function verifyOrderOwners(
-        uint256[] memory _orderIds,
+        uint256[] calldata _orderIds,
         address _owner
     ) external view returns (bool);
 
-    function verifyOrdersReady(uint256[] memory _orderIds) external view returns (bool);
+    function verifyOrdersReady(uint256[] calldata _orderIds) external view returns (bool);
 
     function getOrderAmounts(
-        uint256[] memory _orderIds,
+        uint256[] calldata _orderIds,
         uint256 amountToFill,
         uint256 maxSpend
     ) external view returns(uint256[] memory orderAmounts, uint256 amountFilled);
@@ -42,7 +42,7 @@ interface IOrderbook {
 
     function fillOrders(uint256[] memory _orderIds, uint256[] memory _amounts) external;
 
-    function cancelOrders(uint256[] memory _orderIds) external;
+    function cancelOrders(uint256[] calldata _orderIds) external;
 
-    function claimOrders(uint256[] memory _orderIds) external;
+    function claimOrders(uint256[] calldata _orderIds) external;
 }

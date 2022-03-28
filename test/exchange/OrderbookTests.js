@@ -434,21 +434,5 @@ describe('Orderbook Contract tests', () => {
       storedOrder = await orderbook.getOrder(id3);
       expect(storedOrder.state).is.equal(4); // State.CANCELLED
     });
-    
-    it('Invalid Operations tests', async () => {
-      // var id3 = await orderbook.getId(orderData3);
-      id = await orderbook.ordersLength();
-      await orderbook.placeOrder(orderData1);
-      id3 = await orderbook.ordersLength();
-      await orderbook.placeOrder(orderData3);
-      await orderbook.fillOrders([id3], [3]);
-
-      // cannot cancel filled orders
-      await expect(orderbook.cancelOrders([id3])).to.be.reverted;
-
-      await orderbook.cancelOrders([id]);
-      // cannot cancel already cancelled orders
-      await expect(orderbook.cancelOrders([id])).to.be.reverted;
-    });
   });
 });

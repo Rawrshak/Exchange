@@ -581,6 +581,60 @@ describe('Exchange Contract', () => {
 
   });
 
+  describe("Invalid Operations", () => {
+    it('Invalid cancel orders', async () => {
+      await ContentContractSetup();
+      await RawrTokenSetup();
+
+      var orderData = [
+        [content.address, 0],
+        playerAddress.address,
+        rawrToken.address,
+        ethers.BigNumber.from(1000).mul(_1e18),
+        5,
+        true
+      ];
+
+      var orderData2 = [
+        [content.address, 0],
+        player2Address.address,
+        rawrToken.address,
+        ethers.BigNumber.from(1000).mul(_1e18),
+        5,
+        false
+      ];
+
+      // Player 1 creates a buy order for an asset
+      await rawrToken.connect(playerAddress).approve(await exchange.tokenEscrow(), ethers.BigNumber.from(5000).mul(_1e18));
+
+      var tx = await exchange.connect(playerAddress).placeOrder(orderData);
+      var receipt = await tx.wait();
+      var ordersPlaced = receipt.events?.filter((x) => { return x.event == "OrderPlaced" });
+      var orderId = ordersPlaced[0].args.orderId;
+
+      // player 2 completely fills buy order
+      await content.connect(player2Address).setApprovalForAll(await exchange.nftsEscrow(), true);
+      await exchange.connect(player2Address).fillOrder(orderId, 5);
+
+      // player 1 cannot cancel a filled order
+      await expect(exchange.connect(playerAddress).cancelOrders([orderId])).to.be.reverted;
+
+      // Player 2 creates a sell order for an asset
+      await content.connect(player2Address).setApprovalForAll(await exchange.nftsEscrow(), true);
+
+      var tx = await exchange.connect(player2Address).placeOrder(orderData2);
+      var receipt = await tx.wait();
+      var ordersPlaced = receipt.events?.filter((x) => { return x.event == "OrderPlaced" });
+      var orderId2 = ordersPlaced[0].args.orderId;
+
+      // player 2 cancels the order
+      expect(await exchange.connect(player2Address).cancelOrders([orderId2]))
+        .to.emit(exchange, 'OrdersDeleted');
+
+      // player 1 cannot cancel a cancelled order
+      await expect(exchange.connect(player2Address).cancelOrders([orderId2])).to.be.reverted;
+    });
+  });
 
 
 });
